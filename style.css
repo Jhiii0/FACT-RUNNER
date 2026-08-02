@@ -1,0 +1,450 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+:root {
+    --primary: #3b82f6;
+    --secondary: #8b5cf6;
+    --accent: #10b981;
+    --danger: #ef4444;
+    --text-main: #f8fafc;
+    --glass-bg: rgba(10, 10, 30, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.15);
+    --road-color: #1a1a2e;
+    --tie-color: #8B4513;
+    --rail-color: #d4af37;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+body {
+    background: #0b0f19;
+    color: var(--text-main);
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hidden { display: none !important; }
+
+/* ─── MENUS ─────────────────────────────────────────── */
+.glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+#main-menu, #game-over, #victory {
+    position: absolute;
+    z-index: 200;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    width: 90%;
+    max-width: 460px;
+}
+
+h1 {
+    font-size: 2.6rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.15;
+}
+
+button {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    padding: 0.9rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(59,130,246,0.45); }
+
+.zone-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.zone-btn { background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); font-size: 0.95rem; }
+.zone-btn.selected { background: var(--primary); border-color: var(--primary); }
+
+/* ─── GAME CONTAINER ─────────────────────────────────── */
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #0b0f19;
+}
+
+/* ─── SKY ────────────────────────────────────────────── */
+#sky {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 55%;
+    background: linear-gradient(to bottom, #060912 0%, #0f172a 60%, #1e3a5f 100%);
+    z-index: 0;
+}
+
+/* Stars */
+#sky::before {
+    content: '';
+    position: absolute;
+    width: 100%; height: 100%;
+    background-image:
+        radial-gradient(1px 1px at 10% 20%, white, transparent),
+        radial-gradient(1px 1px at 30% 10%, white, transparent),
+        radial-gradient(1px 1px at 55% 30%, white, transparent),
+        radial-gradient(1px 1px at 70% 15%, white, transparent),
+        radial-gradient(1px 1px at 85% 25%, white, transparent),
+        radial-gradient(1px 1px at 20% 45%, white, transparent),
+        radial-gradient(1px 1px at 90% 40%, white, transparent),
+        radial-gradient(1px 1px at 45% 8%, white, transparent),
+        radial-gradient(2px 2px at 65% 50%, rgba(255,255,255,0.6), transparent),
+        radial-gradient(1px 1px at 5% 35%, white, transparent);
+}
+
+/* ─── GROUND / SCENE ─────────────────────────────────── */
+#scene {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    height: 60%;
+    z-index: 1;
+    overflow: hidden;
+}
+
+/* Ground plane */
+#ground {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0d1117;
+}
+
+/* ─── TRACK (CSS 3D perspective) ─────────────────────── */
+#track-wrapper {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0; height: 0;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+#road {
+    position: absolute;
+    bottom: 0;
+    left: -350px;
+    width: 700px;
+    height: 2000px;
+    background: #1a1a2e;
+    transform-origin: bottom center;
+    transform: perspective(500px) rotateX(80deg);
+    z-index: 2;
+
+    /* Sleepers + rails */
+    background-image:
+        linear-gradient(to bottom, transparent 0%, transparent 44%, var(--tie-color) 44%, var(--tie-color) 56%, transparent 56%),
+        linear-gradient(to right,
+            transparent 0%,   transparent 30%,
+            var(--rail-color) 30%, var(--rail-color) 32%,
+            transparent 32%, transparent 35%,
+            var(--rail-color) 35%, var(--rail-color) 37%,
+            transparent 37%, transparent 63%,
+            var(--rail-color) 63%, var(--rail-color) 65%,
+            transparent 65%, transparent 68%,
+            var(--rail-color) 68%, var(--rail-color) 70%,
+            transparent 70%, transparent 100%);
+    background-size: 100% 110px, 100% 100%;
+}
+
+#road.moving {
+    animation: trackScroll 0.5s linear infinite;
+}
+
+@keyframes trackScroll {
+    from { background-position: 0 0, 0 0; }
+    to   { background-position: 0 120px, 0 0; }
+}
+
+/* Side walls (dark tunnel sides like reference) */
+#wall-left, #wall-right {
+    position: absolute;
+    bottom: 0;
+    width: 300px;
+    height: 1500px;
+    transform-origin: bottom center;
+    z-index: 1;
+}
+#wall-left {
+    left: -550px;
+    background: linear-gradient(to right, #060a12, #0d1117);
+    transform: perspective(600px) rotateX(78deg) rotateY(-15deg);
+}
+#wall-right {
+    left: 250px;
+    background: linear-gradient(to left, #060a12, #0d1117);
+    transform: perspective(600px) rotateX(78deg) rotateY(15deg);
+}
+
+/* ─── BUILDINGS (side of track) ─────────────────────── */
+.building-side {
+    position: absolute;
+    bottom: 0;
+    z-index: 3;
+}
+.building-side.left  { right: calc(50% + 120px); }
+.building-side.right { left: calc(50% + 120px); }
+
+/* ─── PLAYER ─────────────────────────────────────────── */
+#player-wrap {
+    position: absolute;
+    bottom: 0;
+    /* left set by JS */
+    z-index: 20;
+    transition: left 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Vantor body (blocky character) */
+#player {
+    position: relative;
+    width: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    bottom: 0;
+    margin-bottom: 0;
+}
+
+/* Head */
+#player .head {
+    width: 36px;
+    height: 36px;
+    background: #f59e0b;
+    border-radius: 4px;
+    border: 2px solid #92400e;
+    position: relative;
+    box-shadow: inset -4px -4px 8px rgba(0,0,0,0.4);
+}
+#player .head::after {
+    content: '';
+    position: absolute;
+    bottom: 4px; left: 6px;
+    width: 24px; height: 6px;
+    background: #92400e;
+    border-radius: 3px;
+}
+
+/* Body */
+#player .body {
+    width: 46px;
+    height: 40px;
+    background: #ea580c;
+    border-radius: 3px;
+    border: 2px solid #9a3412;
+    box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5);
+    margin-top: 1px;
+}
+
+/* Legs */
+#player .legs {
+    display: flex;
+    gap: 4px;
+    margin-top: 1px;
+}
+#player .leg {
+    width: 18px;
+    height: 28px;
+    background: #1e3a5f;
+    border-radius: 2px;
+    border: 2px solid #0f172a;
+    box-shadow: inset -3px -3px 6px rgba(0,0,0,0.5);
+    animation: legRun 0.4s alternate infinite;
+}
+#player .leg:last-child { animation-direction: alternate-reverse; }
+
+@keyframes legRun {
+    from { transform: rotateX(15deg); }
+    to   { transform: rotateX(-15deg); }
+}
+
+#player.jumping {
+    animation: jumpAnim 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+@keyframes jumpAnim {
+    0%   { transform: translateY(0); }
+    45%  { transform: translateY(-80px); }
+    100% { transform: translateY(0); }
+}
+
+#player.hit {
+    animation: hitAnim 0.25s ease;
+}
+@keyframes hitAnim {
+    0%   { filter: brightness(3) saturate(0); }
+    100% { filter: brightness(1) saturate(1); }
+}
+
+/* Robot state (3+ combo) */
+#player.robot .head { background: #9ca3af; border-color: #374151; }
+#player.robot .head::before {
+    content: '';
+    position: absolute;
+    top: 8px; left: 4px;
+    width: 28px; height: 8px;
+    background: #06b6d4;
+    border-radius: 4px;
+    box-shadow: 0 0 8px #06b6d4;
+}
+#player.robot .head::after { display: none; }
+#player.robot .body { background: #6b7280; border-color: #374151; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5), 0 0 15px rgba(6,182,212,0.4); }
+#player.robot .leg  { background: #4b5563; }
+
+/* ─── ENTITIES (obstacles & gates) ─────────────────── */
+#entities-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.entity {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 800;
+    font-size: 1rem;
+    color: white;
+    border-radius: 6px;
+    text-shadow: 1px 1px 2px black;
+    will-change: bottom, width, height;
+    transition: none;
+}
+
+.obstacle {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    border: 2px solid #93c5fd;
+    box-shadow: inset -3px -3px 8px rgba(0,0,0,0.4), 0 0 12px rgba(37,99,235,0.5);
+    background-image:
+        linear-gradient(to right, rgba(255,255,255,0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.08) 1px, transparent 1px);
+    background-size: 14px 14px;
+}
+
+.gate {
+    background: rgba(99,102,241,0.92);
+    border: 3px solid rgba(255,255,255,0.6);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    font-size: 0.85rem;
+    padding: 4px;
+    text-align: center;
+}
+
+/* ─── HUD ────────────────────────────────────────────── */
+#hud {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%);
+}
+
+#lives-display { color: var(--danger); font-size: 1.3rem; font-weight: 700; letter-spacing: 3px; }
+
+#combo-display {
+    color: #f59e0b;
+    font-size: 1.1rem;
+    font-weight: 700;
+    background: rgba(0,0,0,0.4);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(245,158,11,0.4);
+    transition: all 0.2s;
+}
+.combo-high {
+    color: #06b6d4 !important;
+    border-color: #06b6d4 !important;
+    box-shadow: 0 0 10px rgba(6,182,212,0.5) !important;
+}
+
+#parts-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+}
+.human-part {
+    width: 22px; height: 22px;
+    background: #334155;
+    border-radius: 50%;
+    border: 2px solid #475569;
+    transition: all 0.4s;
+}
+.human-part.collected {
+    background: var(--accent);
+    border-color: #6ee7b7;
+    box-shadow: 0 0 8px var(--accent);
+}
+
+/* ─── QUESTION BANNER ────────────────────────────────── */
+#question-display {
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: rgba(0,0,0,0.75);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 30px;
+    padding: 8px 24px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-align: center;
+    white-space: nowrap;
+    max-width: 90vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+/* ─── COMBO POP ANIMATION ────────────────────────────── */
+#combo-popup {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 150;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #fbbf24;
+    text-shadow: 0 0 20px #fbbf24;
+    pointer-events: none;
+    animation: comboPopAnim 0.8s ease forwards;
+}
+@keyframes comboPopAnim {
+    0%   { opacity: 1; transform: translateX(-50%) scale(1); }
+    80%  { opacity: 0.8; transform: translateX(-50%) scale(1.4) translateY(-20px); }
+    100% { opacity: 0; transform: translateX(-50%) scale(1.2) translateY(-40px); }
+}

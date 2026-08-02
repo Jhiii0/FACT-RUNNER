@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fact Runner: Loot & Learn</title>
+    <meta name="description" content="Help Vantor collect human body parts by answering educational questions in this endless runner!">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- MAIN MENU -->
+<div id="main-menu" class="glass-panel">
+    <h1>Fact Runner:<br>Loot &amp; Learn</h1>
+    <p style="color:rgba(255,255,255,0.65);font-size:0.95rem;">Help Vantor collect body parts by answering correctly. Avoid obstacles. Become whole!</p>
+    <h3 style="font-size:0.85rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:2px;">Choose a Zone</h3>
+    <div class="zone-selector" id="zone-selector">
+        <button class="zone-btn selected" data-zone="mathematics">📐 Mathematics</button>
+        <button class="zone-btn" data-zone="science">🔬 Science</button>
+        <button class="zone-btn" data-zone="history">📜 History</button>
+        <button class="zone-btn" data-zone="technology">💻 Technology</button>
+        <button class="zone-btn" data-zone="randomized" style="grid-column:span 2;">🎲 Randomized</button>
+    </div>
+    <button id="start-btn" style="margin-top:0.5rem;font-size:1.3rem;padding:1.1rem;">🚀 START JOURNEY</button>
+</div>
+
+<!-- GAME OVER -->
+<div id="game-over" class="glass-panel hidden">
+    <h1>💀 Game Over</h1>
+    <p id="go-text"></p>
+    <button id="restart-btn">Try Again</button>
+    <button id="go-menu-btn" style="background:rgba(255,255,255,0.08);border:1px solid var(--glass-border);">Main Menu</button>
+</div>
+
+<!-- VICTORY (unused but kept for future) -->
+<div id="victory" class="glass-panel hidden">
+    <h1>🎉 Transformation!</h1>
+    <p>Vantor has become human!</p>
+    <p>Knowledge: <span id="knowledge-stats">0</span></p>
+    <button id="main-menu-btn">Main Menu</button>
+</div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+    <div id="lives-display"></div>
+    <div id="combo-display">Combo: 0</div>
+    <div id="parts-container">
+        Parts:
+        <div class="human-part" id="part-0"></div>
+        <div class="human-part" id="part-1"></div>
+        <div class="human-part" id="part-2"></div>
+        <div class="human-part" id="part-3"></div>
+        <div class="human-part" id="part-4"></div>
+    </div>
+</div>
+
+<div id="question-display" class="hidden"></div>
+
+<!-- GAME WORLD -->
+<div id="game-container" class="hidden">
+    <div id="sky"></div>
+
+    <!-- 3D Scene -->
+    <div id="scene">
+        <div id="ground"></div>
+
+        <!-- Buildings -->
+        <div id="buildings-left"></div>
+        <div id="buildings-right"></div>
+
+        <!-- Track wrapper for 3D perspective -->
+        <div id="track-wrapper">
+            <div id="wall-left"></div>
+            <div id="wall-right"></div>
+            <div id="road"></div>
+        </div>
+
+        <!-- Entities rendered above track in screen space -->
+        <div id="entities-container"></div>
+
+        <!-- Player rendered in screen space -->
+        <div id="player-wrap">
+            <div id="player">
+                <div class="head"></div>
+                <div class="body"></div>
+                <div class="legs">
+                    <div class="leg"></div>
+                    <div class="leg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="questions.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
