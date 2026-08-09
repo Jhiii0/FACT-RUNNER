@@ -1,60 +1,70 @@
-// ─── FACT RUNNER: LOOT & LEARN ──────────────────────────────────────────────
+// ─── FACT RUNNER: HALLWAY DASH ──────────────────────────────────────────────
 
-// DOM
-const mainMenu      = document.getElementById('main-menu');
-const gameOverScreen= document.getElementById('game-over');
-const victoryScreen = document.getElementById('victory');
-const gameContainer = document.getElementById('game-container');
-const hud           = document.getElementById('hud');
-const road          = document.getElementById('road');
-const playerWrap    = document.getElementById('player-wrap');
-const playerEl      = document.getElementById('player');
+// DOM Elements
+const mainMenu       = document.getElementById('main-menu');
+const pauseMenu      = document.getElementById('pause-menu');
+const gameOverScreen = document.getElementById('game-over');
+const victoryScreen  = document.getElementById('victory');
+const gameContainer  = document.getElementById('game-container');
+const hud            = document.getElementById('hud');
+const road           = document.getElementById('road');
+const playerWrap     = document.getElementById('player-wrap');
+const playerEl       = document.getElementById('player');
 const entitiesContainer = document.getElementById('entities-container');
-const livesDisplay  = document.getElementById('lives-display');
-const comboDisplay  = document.getElementById('combo-display');
-const questionDisplay = document.getElementById('question-display');
-const zoneBtns      = document.querySelectorAll('.zone-btn');
+const livesDisplay   = document.getElementById('lives-display');
+const comboDisplay   = document.getElementById('combo-display');
+const formBadge      = document.getElementById('form-badge');
+const questionDisplay= document.getElementById('question-display');
+const zoneBtns       = document.querySelectorAll('.zone-btn');
 
-// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+const evolutionBanner = document.getElementById('evolution-banner');
+const evoIcon        = document.getElementById('evo-icon');
+const evoTitle       = document.getElementById('evo-title');
+const evoDesc        = document.getElementById('evo-desc');
 
-// #scene is 60% of viewport height, positioned at bottom.
-// Entities-container covers full scene width/height.
-// We project from horizon (top of scene) → player (bottom of scene).
+// HUD Pause Button
+const hudPauseBtn    = document.getElementById('hud-pause-btn');
+const resumeBtn      = document.getElementById('resume-btn');
+const pauseRestartBtn= document.getElementById('pause-restart-btn');
+const pauseMenuBtn   = document.getElementById('pause-menu-btn');
 
-// How far from the LEFT EDGE of the screen each lane centre sits (in px).
-// Computed dynamically from window.innerWidth so it always centred on road.
-function getLaneScreenX(lane) {
-    const cx = window.innerWidth / 2; // road centre x in screen
-    const spread = Math.min(window.innerWidth * 0.14, 130); // how far lanes spread
-    return cx + (lane - 1) * spread; // lane 0=left, 1=centre, 2=right
+// ─── CONSTANTS & THIRD-PERSON CAMERA PERSPECTIVE MATH ──────────────────────
+
+const HORIZON_Y_FRAC = 0.25; 
+const PLAYER_BOTTOM_PX = 25;
+
+// Computes exact screen X center for each of the 3 fixed tracks: 0=Left, 1=Center, 2=Right
+function getLaneScreenX(lane, progress = 1) {
+    const cx = window.innerWidth / 2;
+    // Track spread fits cleanly inside the open 3-lane school hallway corridor
+    const maxSpread = Math.min(window.innerWidth * 0.16, 170);
+    const spreadFactor = 0.4 + progress * 0.6;
+    const currentSpread = maxSpread * spreadFactor;
+
+    return cx + (lane - 1) * currentSpread;
 }
 
-// Player sits at this Y from the BOTTOM of the scene (px)
-const PLAYER_BOTTOM_PX = 45;
-// Horizon is this fraction from TOP of the scene
-const HORIZON_FRAC = 0.02;
-
-// ─── STATE ───────────────────────────────────────────────────────────────────
-let currentZone   = 'mathematics';
-let lives         = 5;
-let partsCollected= 0;
-let currentLane   = 1;
-let isRunning     = false;
-let gameSpeed     = 3.5;
-let activeEntities= [];
+// ─── GAME STATE ───────────────────────────────────────────────────────────────
+let currentZone    = 'mathematics';
+let lives          = 5;
+let partsCollected = 0;
+let currentLane    = 1;
+let isRunning      = false;
+let isPaused       = false;
+let gameSpeed      = 3.5;
+let activeEntities = [];
 let currentQuestion = null;
-let spawnTimer    = 0;
-let questionMode  = false;
-let totalKnowledge= 0;
-let isJumping     = false;
-let correctCombo  = 0;
-let rafId         = null;
-let buildingTimer = 0;
+let spawnTimer     = 0;
+let questionMode   = false;
+let totalKnowledge = 0;
+let isJumping      = false;
+let correctCombo   = 0;
+let rafId          = null;
+let currentForm    = 'box'; // 'box', 'robot', 'human'
 
-// LocalStorage
 totalKnowledge = parseInt(localStorage.getItem('vantorParts') || '0');
 
-// ─── ZONE SELECTION ───────────────────────────────────────────────────────────
+// ─── EVENT LISTENERS ──────────────────────────────────────────────────────────
 zoneBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         zoneBtns.forEach(b => b.classList.remove('selected'));
@@ -78,41 +88,112 @@ document.getElementById('main-menu-btn').addEventListener('click', () => {
     mainMenu.classList.remove('hidden');
 });
 
-// ─── CONTROLS ─────────────────────────────────────────────────────────────────
+// Pause menu listeners
+if (hudPauseBtn) hudPauseBtn.addEventListener('click', togglePause);
+if (resumeBtn) resumeBtn.addEventListener('click', resumeGame);
+if (pauseRestartBtn) {
+    pauseRestartBtn.addEventListener('click', () => {
+        pauseMenu.classList.add('hidden');
+        isPaused = false;
+        startGame();
+    });
+}
+if (pauseMenuBtn) {
+    pauseMenuBtn.addEventListener('click', () => {
+        pauseMenu.classList.add('hidden');
+        isPaused = false;
+        isRunning = false;
+        gameContainer.classList.add('hidden');
+        hud.classList.add('hidden');
+        mainMenu.classList.remove('hidden');
+    });
+}
+
+window.addEventListener('resize', () => {
+    if (isRunning) updatePlayerPosition();
+});
+
+// ─── KEYBOARD & TOUCH SWIPE CONTROLS ─────────────────────────────────────────
 window.addEventListener('keydown', e => {
-    if (!isRunning) return;
+    if (e.key === 'p' || e.key === 'P') {
+        if (isRunning) {
+            togglePause();
+            return;
+        }
+    }
+
+    if (!isRunning || isPaused) return;
+
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        if (currentLane > 0) { currentLane--; updatePlayerPosition(); }
+        moveLeft();
     } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        if (currentLane < 2) { currentLane++; updatePlayerPosition(); }
+        moveRight();
     } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
         doJump();
     }
 });
 
-// Swipe / touch support
+function togglePause() {
+    if (isPaused) {
+        resumeGame();
+    } else {
+        pauseGame();
+    }
+}
+
+function pauseGame() {
+    if (!isRunning) return;
+    isPaused = true;
+    road.classList.remove('moving');
+    pauseMenu.classList.remove('hidden');
+}
+
+function resumeGame() {
+    if (!isRunning) return;
+    isPaused = false;
+    pauseMenu.classList.add('hidden');
+    road.classList.add('moving');
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(gameLoop);
+}
+
+function moveLeft() {
+    if (currentLane > 0) { 
+        currentLane--; 
+        updatePlayerPosition(); 
+    }
+}
+
+function moveRight() {
+    if (currentLane < 2) { 
+        currentLane++; 
+        updatePlayerPosition(); 
+    }
+}
+
+// Touch swipe support (Mobile & Tablet)
 let touchStartX = 0, touchStartY = 0;
 window.addEventListener('touchstart', e => {
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
 }, { passive: true });
+
 window.addEventListener('touchend', e => {
-    if (!isRunning) return;
+    if (!isRunning || isPaused) return;
     const dx = e.changedTouches[0].clientX - touchStartX;
     const dy = e.changedTouches[0].clientY - touchStartY;
     if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx < -30 && currentLane > 0) { currentLane--; updatePlayerPosition(); }
-        if (dx >  30 && currentLane < 2) { currentLane++; updatePlayerPosition(); }
+        if (dx < -30) moveLeft();
+        if (dx >  30) moveRight();
     } else if (dy < -30) {
         doJump();
     }
 }, { passive: true });
 
-// ─── PLAYER ───────────────────────────────────────────────────────────────────
+// ─── PLAYER POSITIONING & JUMP ────────────────────────────────────────────────
 function updatePlayerPosition() {
-    // Player wrap is inside #scene (position:absolute, left:0, width:100%)
-    // So we set left in screen pixel coords directly
-    const x = getLaneScreenX(currentLane) - 26; // 26 = half player width (52px / 2)
+    const halfPlayerW = 30;
+    const x = getLaneScreenX(currentLane, 1) - halfPlayerW;
     playerWrap.style.left = `${x}px`;
 }
 
@@ -120,36 +201,92 @@ function doJump() {
     if (isJumping) return;
     isJumping = true;
     playerEl.classList.add('jumping');
-    playerEl.querySelector('.leg').style.animationPlayState = 'paused';
-    playerEl.querySelectorAll('.leg')[1].style.animationPlayState = 'paused';
+    
     setTimeout(() => {
         isJumping = false;
         playerEl.classList.remove('jumping');
-        playerEl.querySelectorAll('.leg').forEach(l => l.style.animationPlayState = '');
     }, 550);
+}
+
+// ─── CHARACTER EVOLUTION SYSTEM ──────────────────────────────────────────────
+function updateCharacterForm() {
+    let newForm = 'box';
+    
+    if (correctCombo >= 10) {
+        newForm = 'human';
+    } else if (correctCombo >= 5) {
+        newForm = 'robot';
+    }
+
+    if (newForm !== currentForm) {
+        currentForm = newForm;
+        showEvolutionBanner(currentForm);
+    }
+
+    playerEl.className = `form-${currentForm}`;
+
+    if (currentForm === 'box') {
+        formBadge.className = 'form-badge box-badge';
+        formBadge.textContent = '📦 BOX';
+    } else if (currentForm === 'robot') {
+        formBadge.className = 'form-badge robot-badge';
+        formBadge.textContent = '🤖 ROBOT';
+    } else if (currentForm === 'human') {
+        formBadge.className = 'form-badge human-badge';
+        formBadge.textContent = '🧍 HUMAN';
+    }
+}
+
+function showEvolutionBanner(form) {
+    if (form === 'robot') {
+        evoIcon.textContent = '🤖';
+        evoTitle.textContent = 'ROBOT UNLOCKED!';
+        evoDesc.textContent = '5x Combo reached! Vantor converted into Robot Mode!';
+    } else if (form === 'human') {
+        evoIcon.textContent = '🧍';
+        evoTitle.textContent = 'HUMAN TRANSFORMED!';
+        evoDesc.textContent = '10x Combo streak! Vantor fully restored into Human!';
+    } else {
+        return;
+    }
+
+    evolutionBanner.classList.remove('hidden');
+    evolutionBanner.style.animation = 'none';
+    evolutionBanner.offsetHeight;
+    evolutionBanner.style.animation = 'evoBannerPop 2.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+
+    setTimeout(() => {
+        evolutionBanner.classList.add('hidden');
+    }, 2200);
 }
 
 // ─── GAME START ───────────────────────────────────────────────────────────────
 function startGame() {
     mainMenu.classList.add('hidden');
+    pauseMenu.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
     gameContainer.classList.remove('hidden');
     hud.classList.remove('hidden');
     road.classList.add('moving');
 
-    lives = 5; partsCollected = 0; currentLane = 1;
-    gameSpeed = 3.5; activeEntities = []; spawnTimer = 0;
-    questionMode = false; currentQuestion = null;
-    correctCombo = 0; isJumping = false; buildingTimer = 0;
+    lives = 5; 
+    partsCollected = 0; 
+    currentLane = 1;
+    gameSpeed = 3.5; 
+    activeEntities = []; 
+    spawnTimer = 0;
+    questionMode = false; 
+    currentQuestion = null;
+    correctCombo = 0; 
+    isJumping = false;
+    isPaused = false;
+    currentForm = 'box';
 
     entitiesContainer.innerHTML = '';
-    document.getElementById('buildings-left').innerHTML = '';
-    document.getElementById('buildings-right').innerHTML = '';
-
     questionDisplay.classList.add('hidden');
-    playerEl.className = '';
 
     updatePlayerPosition();
+    updateCharacterForm();
     updateHUD();
 
     isRunning = true;
@@ -167,10 +304,7 @@ function getRandomQuestion() {
     return pool[Math.floor(Math.random() * pool.length)];
 }
 
-// ─── ENTITY CREATION ─────────────────────────────────────────────────────────
-// Entities live in screen space. We simulate perspective by scaling them
-// smaller when they're near the top (horizon) and larger near the bottom (player).
-// progress: 0 = just spawned at horizon, 1 = at player level
+// ─── ENTITIES & 3D GROUND PATH POSITIONING ───────────────────────────────────
 function spawnObstacle() {
     const lane = Math.floor(Math.random() * 3);
     const el = document.createElement('div');
@@ -186,93 +320,82 @@ function spawnQuestionGates() {
     questionDisplay.textContent = `❓ ${currentQuestion.question}`;
     questionDisplay.classList.remove('hidden');
 
-    const lanes = [0, 1, 2].sort(() => Math.random() - 0.5);
+    const availableLanes = [0, 1, 2].sort(() => Math.random() - 0.5);
+
     for (let i = 0; i < 3; i++) {
         const el = document.createElement('div');
         el.className = 'entity gate';
-        el.textContent = currentQuestion.options[i];
+        const targetLane = availableLanes[i];
+
+        const laneTag = targetLane === 0 ? '◀ LEFT' : targetLane === 1 ? '▲ CENTER' : 'RIGHT ▶';
+
+        el.innerHTML = `
+            <span class="gate-lane-tag">${laneTag}</span>
+            <span class="gate-text">${currentQuestion.options[i]}</span>
+        `;
+
         const correct = (i === currentQuestion.answer);
         if (correct) el.dataset.correct = 'true';
+        
         entitiesContainer.appendChild(el);
-        activeEntities.push({ el, lane: lanes[i], type: 'gate', progress: 0, correct });
+        activeEntities.push({ el, lane: targetLane, type: 'gate', progress: 0, correct });
     }
 }
 
 function positionEntity(ent) {
-    const sceneH  = document.getElementById('scene').offsetHeight;
-    const p       = Math.max(0, Math.min(1, ent.progress));
+    const sceneH = document.getElementById('scene').offsetHeight;
+    const p      = Math.max(0, Math.min(1, ent.progress));
 
-    // ── VERTICAL ──────────────────────────────────────────────────
-    // At p=0: entity is near top of scene (horizon) → large bottom value
-    // At p=1: entity is near bottom (player level) → small bottom value
-    const horizonPx = sceneH * HORIZON_FRAC;          // px from top of scene
-    const topBottomPx = sceneH - horizonPx;            // as "bottom" value
-    const entityBottom = PLAYER_BOTTOM_PX + (1 - p) * (topBottomPx - PLAYER_BOTTOM_PX);
+    const topHorizonBottomPx = sceneH * (1 - HORIZON_Y_FRAC);
 
-    // ── SCALE ─────────────────────────────────────────────────────
-    const minScale = 0.05;
-    const maxScale = 0.95;
-    const scale    = minScale + p * (maxScale - minScale);
+    const entityBottom = topHorizonBottomPx - p * (topHorizonBottomPx - PLAYER_BOTTOM_PX);
 
-    const baseW = ent.type === 'gate' ? 120 : 80;
-    const baseH = ent.type === 'gate' ? 68  : 68;
+    const entityCX = getLaneScreenX(ent.lane, p);
+
+    const scale = 0.45 + p * 0.55;
+
+    const baseW = ent.type === 'gate' ? 105 : 75;
+    const baseH = ent.type === 'gate' ? 70  : 65;
     const w = baseW * scale;
     const h = baseH * scale;
 
-    // ── HORIZONTAL ────────────────────────────────────────────────
-    // entities-container covers full screen width.
-    // At p=0 (horizon) → centre of screen.
-    // At p=1 (player)  → lane's screen position.
-    const centreX   = window.innerWidth / 2;
-    const laneX     = getLaneScreenX(ent.lane);
-    const entityCX  = centreX + p * (laneX - centreX); // interpolate
-    const entityLeft= entityCX - w / 2;
+    const entityLeft = entityCX - w / 2;
 
     ent.el.style.width       = `${w}px`;
     ent.el.style.height      = `${h}px`;
     ent.el.style.left        = `${entityLeft}px`;
     ent.el.style.bottom      = `${entityBottom}px`;
-    ent.el.style.fontSize    = `${Math.max(0.45, scale * 0.9)}rem`;
-    ent.el.style.borderWidth = `${Math.max(1, Math.round(scale * 3))}px`;
-    ent.el.style.opacity     = p < 0.07 ? (p / 0.07) : 1;
+    ent.el.style.fontSize    = `${scale * 0.95}rem`;
+    ent.el.style.borderWidth = `${Math.max(2, Math.round(scale * 3))}px`;
+    ent.el.style.opacity     = p < 0.04 ? (p / 0.04) : 1;
 }
 
-
-// ─── HUD ──────────────────────────────────────────────────────────────────────
+// ─── HUD UPDATE ───────────────────────────────────────────────────────────────
 function updateHUD() {
     livesDisplay.textContent = '❤️'.repeat(Math.max(0, lives));
 
     for (let i = 0; i < 5; i++) {
-        document.getElementById(`part-${i}`).classList.toggle('collected', i < (partsCollected % 5 === 0 && partsCollected > 0 ? 5 : partsCollected % 5));
+        const partEl = document.getElementById(`part-${i}`);
+        if (partEl) {
+            const isCollected = i < (partsCollected % 5 === 0 && partsCollected > 0 ? 5 : partsCollected % 5);
+            partEl.classList.toggle('collected', isCollected);
+        }
     }
 
     comboDisplay.textContent = `Combo: ${correctCombo}`;
-    comboDisplay.classList.toggle('combo-high', correctCombo >= 3);
-
-    // Robot mode
-    if (correctCombo >= 3) {
-        playerEl.classList.add('robot');
-    } else {
-        playerEl.classList.remove('robot');
-    }
-
-    // Glow based on parts
-    const gp = Math.min(partsCollected % 6, 5);
-    if (gp > 0) {
-        playerEl.querySelector('.body').style.boxShadow =
-            `inset -5px -5px 10px rgba(0,0,0,0.5), 0 0 ${gp*8}px ${gp*4}px rgba(16,185,129,${0.3 + gp*0.1})`;
-    } else {
-        playerEl.querySelector('.body').style.boxShadow = '';
-    }
+    updateCharacterForm();
 }
 
-// ─── DAMAGE & COLLECT ─────────────────────────────────────────────────────────
+// ─── DAMAGE & COLLECTION ──────────────────────────────────────────────────────
 function takeDamage() {
     lives--;
     correctCombo = 0;
+    updateCharacterForm();
     updateHUD();
+
     playerEl.classList.add('hit');
     setTimeout(() => playerEl.classList.remove('hit'), 300);
+
     if (lives <= 0) endGame();
 }
 
@@ -282,25 +405,14 @@ function collectPart() {
     correctCombo++;
     localStorage.setItem('vantorParts', totalKnowledge);
 
-    // Combo popup
-    if (correctCombo > 1) showComboPopup();
-
+    updateCharacterForm();
     updateHUD();
-}
-
-function showComboPopup() {
-    const old = document.getElementById('combo-popup');
-    if (old) old.remove();
-    const pop = document.createElement('div');
-    pop.id = 'combo-popup';
-    pop.textContent = correctCombo >= 3 ? `🤖 ROBOT MODE x${correctCombo}!` : `🔥 x${correctCombo} Combo!`;
-    gameContainer.appendChild(pop);
-    setTimeout(() => pop.remove(), 850);
 }
 
 // ─── GAME OVER ────────────────────────────────────────────────────────────────
 function endGame() {
     isRunning = false;
+    isPaused = false;
     cancelAnimationFrame(rafId);
     road.classList.remove('moving');
 
@@ -309,52 +421,24 @@ function endGame() {
     questionDisplay.classList.add('hidden');
 
     document.getElementById('go-text').innerHTML =
-        `Parts collected this run: <strong>${partsCollected}</strong><br>Total knowledge: <strong>${totalKnowledge}</strong>`;
+        `Parts collected this run: <strong>${partsCollected}</strong><br>` +
+        `Highest Combo: <strong>x${correctCombo}</strong><br>` +
+        `Total knowledge: <strong>${totalKnowledge}</strong>`;
     gameOverScreen.classList.remove('hidden');
-}
-
-// ─── BUILDINGS ────────────────────────────────────────────────────────────────
-function spawnBuilding() {
-    const colors = ['#1e3a5f','#1a2e4f','#0f2035','#16213e','#1a1a3e'];
-    const heights= [120,150,180,200,90,130];
-    const h = heights[Math.floor(Math.random() * heights.length)];
-    const w = 50 + Math.floor(Math.random() * 50);
-    const c = colors[Math.floor(Math.random() * colors.length)];
-
-    ['buildings-left','buildings-right'].forEach((side, idx) => {
-        const b = document.createElement('div');
-        b.style.cssText = `
-            position:absolute;bottom:0;${idx===0?'right:0':'left:0'};
-            width:${w}px;height:${h}px;
-            background:${c};
-            border-top:4px solid rgba(255,255,255,0.1);
-            border-${idx===0?'left':'right'}:6px solid rgba(0,0,0,0.5);
-            background-image:repeating-linear-gradient(to bottom,transparent,transparent 22px,rgba(255,220,50,0.15) 22px,rgba(255,220,50,0.15) 28px);
-        `;
-        document.getElementById(side).appendChild(b);
-
-        // Remove after 4 seconds
-        setTimeout(() => b.remove(), 4000);
-    });
 }
 
 // ─── MAIN GAME LOOP ───────────────────────────────────────────────────────────
 function gameLoop() {
-    if (!isRunning) return;
+    if (!isRunning || isPaused) return;
 
     spawnTimer++;
-    buildingTimer++;
 
-    // Spawn buildings
-    if (buildingTimer % 120 === 0) spawnBuilding();
-
-    // Spawn interactables
-    const effectiveSpeed = questionMode ? gameSpeed * 0.3 : gameSpeed;
+    const effectiveSpeed = questionMode ? gameSpeed * 0.35 : gameSpeed;
 
     if (!questionMode) {
-        if (spawnTimer > 140) {
+        if (spawnTimer > 130) {
             spawnTimer = 0;
-            if (Math.random() < 0.3) {
+            if (Math.random() < 0.35) {
                 spawnQuestionGates();
             } else {
                 spawnObstacle();
@@ -365,10 +449,9 @@ function gameLoop() {
     // Update entities
     for (let i = activeEntities.length - 1; i >= 0; i--) {
         const ent = activeEntities[i];
-        ent.progress += effectiveSpeed * 0.0012;
+        ent.progress += effectiveSpeed * 0.0013;
         positionEntity(ent);
 
-        // Remove off-screen
         if (ent.progress > 1.08) {
             ent.el.remove();
             activeEntities.splice(i, 1);
@@ -380,14 +463,15 @@ function gameLoop() {
             continue;
         }
 
-        // Collision zone: entity reached the player
-        if (ent.progress >= 0.95 && ent.progress <= 1.03 && ent.lane === currentLane) {
+        // Collision detection
+        if (ent.progress >= 0.94 && ent.progress <= 1.03 && ent.lane === currentLane) {
             const hit = ent;
-            // Remove all same-group entities
+
             if (hit.type === 'gate') {
                 questionMode = false;
                 questionDisplay.classList.add('hidden');
                 spawnTimer = 0;
+
                 activeEntities.filter(e => e.type === 'gate').forEach(e => e.el.remove());
                 activeEntities = activeEntities.filter(e => e.type !== 'gate');
 
@@ -400,13 +484,11 @@ function gameLoop() {
                     takeDamage();
                 }
             }
-            // Re-index since we spliced
             break;
         }
     }
 
-    // Increase difficulty over time
-    gameSpeed += 0.0008;
+    gameSpeed += 0.0007;
 
     rafId = requestAnimationFrame(gameLoop);
 }
