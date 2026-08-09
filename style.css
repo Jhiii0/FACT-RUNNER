@@ -249,7 +249,7 @@ button:active { transform: scale(0.96); }
 /* ─── BACK HORIZON WALL ──────────────────────────────── */
 #hallway-back-wall {
     position: absolute;
-    top: 24%; left: 50%;
+    top: 26%; left: 50%;
     transform: translateX(-50%);
     width: clamp(180px, 35vw, 340px);
     height: clamp(100px, 18vh, 170px);
@@ -305,7 +305,7 @@ button:active { transform: scale(0.96); }
     position: absolute;
     top: 0;
     height: 100%;
-    width: clamp(90px, 22vw, 280px);
+    width: clamp(60px, 16vw, 220px);
     z-index: 4;
     pointer-events: none;
     overflow: hidden;
@@ -408,9 +408,9 @@ button:active { transform: scale(0.96); }
 /* ─── 3D SCENE ───────────────────────────────────────── */
 #scene {
     position: absolute;
-    bottom: 0; left: 0;
+    top: 0; bottom: 0; left: 0; right: 0;
     width: 100%;
-    height: 70%;
+    height: 100%;
     z-index: 2;
     overflow: hidden;
 }
@@ -418,8 +418,11 @@ button:active { transform: scale(0.96); }
 #ground {
     position: absolute;
     bottom: 0; left: 0;
-    width: 100%; height: 100%;
+    width: 100%; height: 74%;
     background: #0f172a;
+    background-image:
+        linear-gradient(to bottom, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.85) 40%, #0f172a 100%),
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(59,130,246,0.1) 40px);
 }
 
 /* ─── 3-LANE PERSPECTIVE FLOOR ─────────────────────── */
@@ -435,21 +438,21 @@ button:active { transform: scale(0.96); }
 #road {
     position: absolute;
     bottom: 0;
-    left: -400px;
-    width: 800px;
-    height: 2000px;
+    left: 50%;
+    width: clamp(650px, 90vw, 1000px);
+    height: 1400px;
     background: #1e293b;
     transform-origin: bottom center;
-    transform: perspective(600px) rotateX(68deg);
+    transform: translateX(-50%) perspective(500px) rotateX(66deg);
     z-index: 2;
     background-image:
         linear-gradient(to right,
             rgba(255,255,255,0.03) 0%,  rgba(255,255,255,0.03) 32%,
-            rgba(59,130,246,0.5) 32%,   rgba(59,130,246,0.5) 34%,
+            rgba(59,130,246,0.6) 32%,   rgba(59,130,246,0.6) 34%,
             rgba(255,255,255,0.03) 34%, rgba(255,255,255,0.03) 66%,
-            rgba(59,130,246,0.5) 66%,   rgba(59,130,246,0.5) 68%,
+            rgba(59,130,246,0.6) 66%,   rgba(59,130,246,0.6) 68%,
             rgba(255,255,255,0.03) 68%, rgba(255,255,255,0.03) 100%),
-        linear-gradient(to bottom, rgba(255,255,255,0.1) 2px, transparent 2px);
+        linear-gradient(to bottom, rgba(255,255,255,0.12) 2px, transparent 2px);
     background-size: 100% 100%, 100% 90px;
 }
 
@@ -500,6 +503,8 @@ button:active { transform: scale(0.96); }
     align-items: center;
     justify-content: center;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    overflow: hidden;
+    min-width: 0;
 }
 
 .hud-label {
@@ -603,7 +608,7 @@ button:active { transform: scale(0.96); }
 /* ─── QUESTION BANNER ────────────────────────────────── */
 #question-display {
     position: fixed;
-    top: 90px;
+    top: max(100px, calc(var(--safe-top) + 90px));
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
@@ -625,7 +630,6 @@ button:active { transform: scale(0.96); }
     position: absolute;
     bottom: 22px;
     z-index: 20;
-    transition: left 0.18s cubic-bezier(0.25,0.46,0.45,0.94);
 }
 
 #player {
@@ -779,4 +783,110 @@ button:active { transform: scale(0.96); }
     color: #fff;
     font-weight: 800;
     word-break: break-word;
+}
+
+/* ─── MOBILE RESPONSIVE OVERRIDES ────────────────────── */
+@media (max-width: 480px) {
+    /* Narrower side walls on small screens */
+    #wall-left, #wall-right {
+        width: clamp(30px, 10vw, 70px);
+    }
+
+    /* Question banner needs more clearance from HUD */
+    #question-display {
+        top: calc(var(--safe-top) + 120px);
+        padding: 6px 12px;
+        font-size: clamp(0.72rem, 3.5vw, 0.95rem);
+        max-width: 94vw;
+    }
+
+    /* Compact HUD cards */
+    .hud-card {
+        padding: 3px 7px;
+        border-radius: 10px;
+    }
+    .hud-label {
+        font-size: 0.48rem;
+        letter-spacing: 0.5px;
+    }
+    #score-display {
+        font-size: 1rem;
+    }
+    #lives-display {
+        font-size: 0.85rem;
+    }
+    #combo-display {
+        font-size: 0.78rem;
+    }
+    .form-badge {
+        font-size: 0.5rem;
+        padding: 1px 5px;
+    }
+
+    /* Smaller restore part dots */
+    .human-part {
+        width: 13px; height: 13px;
+    }
+    #parts-container {
+        gap: 3px;
+    }
+
+    /* Tighter HUD row spacing */
+    .hud-row {
+        gap: 4px;
+        padding: 0 6px;
+    }
+    .hud-row-bottom {
+        gap: 6px;
+        padding-bottom: 4px;
+    }
+
+    /* Pause button compact */
+    .hud-pause-btn {
+        font-size: 0.9rem;
+        padding: 5px 10px;
+    }
+
+    /* Gates: smaller text and tighter padding */
+    .gate {
+        padding: 3px 5px;
+        border-radius: 10px;
+    }
+    .gate-lane-tag {
+        font-size: 0.5em;
+        padding: 1px 4px;
+    }
+    .gate-text {
+        font-size: 0.75em;
+    }
+
+    /* Obstacles smaller on mobile */
+    .obstacle {
+        border-radius: 10px;
+    }
+
+    /* Hallway ceiling adjustments */
+    .hallway-sign {
+        font-size: clamp(0.45rem, 2.5vw, 0.65rem);
+        padding: 2px 8px;
+    }
+
+    /* Back wall shrink */
+    #hallway-back-wall {
+        width: clamp(120px, 30vw, 240px);
+        height: clamp(70px, 14vh, 130px);
+    }
+}
+
+/* ─── TABLET OVERRIDES (481–768px) ───────────────────── */
+@media (min-width: 481px) and (max-width: 768px) {
+    #wall-left, #wall-right {
+        width: clamp(50px, 14vw, 150px);
+    }
+    #question-display {
+        top: calc(var(--safe-top) + 105px);
+    }
+    .gate-text {
+        font-size: 0.82em;
+    }
 }

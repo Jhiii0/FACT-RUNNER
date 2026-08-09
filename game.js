@@ -33,13 +33,20 @@ const BASE_POINTS        = 100;   // points per correct answer
 const COMBO_BONUS_PER    = 25;    // extra points per combo level
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
-const HORIZON_Y_FRAC = 0.25;
-const PLAYER_BOTTOM_PX = 25;
+const HORIZON_Y_FRAC = 0.26;
+const PLAYER_BOTTOM_PX = 22;
 
 function getLaneScreenX(lane, progress = 1) {
     const cx = window.innerWidth / 2;
-    const maxSpread = Math.min(window.innerWidth * 0.16, 170);
-    const spreadFactor = 0.4 + progress * 0.6;
+    const vw = window.innerWidth;
+    // Calculate 3D perspective lane spread
+    // maxSpread at progress = 1 (bottom of screen near player)
+    const maxSpread = vw <= 480
+        ? Math.min(vw * 0.34, 150)
+        : Math.min(vw * 0.28, 280);
+        
+    // Perspective spread factor: at progress = 0 (horizon door), spread is ~35% of maxSpread
+    const spreadFactor = 0.35 + progress * 0.65;
     const currentSpread = maxSpread * spreadFactor;
     return cx + (lane - 1) * currentSpread;
 }
@@ -48,7 +55,8 @@ function getLaneScreenX(lane, progress = 1) {
 let currentZone    = 'mathematics';
 let lives          = 5;
 let partsCollected = 0;
-let currentLane    = 1;
+let targetLane     = 1;         // 0: LEFT (-X), 1: CENTER (0), 2: RIGHT (+X)
+let playerVisualLane = 1.0;     // Interpolated lane position (0.0 to 2.0)
 let isRunning      = false;
 let isPaused       = false;
 let gameSpeed      = 3.5;
@@ -56,6 +64,7 @@ let activeEntities = [];
 let currentQuestion = null;
 let spawnTimer     = 0;
 let questionMode   = false;
+let lastQuestionTime = 0;
 let totalKnowledge = 0;
 let isJumping      = false;
 let correctCombo   = 0;
@@ -151,7 +160,10 @@ if (pauseMenuBtn) {
 }
 
 window.addEventListener('resize', () => {
-    if (isRunning) updatePlayerPosition();
+    if (isRunning) {
+        updatePlayerPosition();
+        activeEntities.forEach(ent => positionEntity(ent));
+    }
 });
 
 // ─── KEYBOARD & TOUCH CONTROLS ────────────────────────────────────────────────
@@ -183,8 +195,8 @@ function resumeGame() {
     rafId = requestAnimationFrame(gameLoop);
 }
 
-function moveLeft()  { if (currentLane > 0) { currentLane--; updatePlayerPosition(); } }
-function moveRight() { if (currentLane < 2) { currentLane++; updatePlayerPosition(); } }
+function moveLeft()  { if (targetLane > 0) targetLane--; }
+function moveRight() { if (targetLane < 2) targetLane++; }
 
 let touchStartX = 0, touchStartY = 0;
 window.addEventListener('touchstart', e => {
@@ -204,7 +216,7 @@ window.addEventListener('touchend', e => {
 
 // ─── PLAYER ───────────────────────────────────────────────────────────────────
 function updatePlayerPosition() {
-    const x = getLaneScreenX(currentLane, 1) - 30;
+    const x = getLaneScreenX(playerVisualLane, 1) - 30;
     playerWrap.style.left = `${x}px`;
 }
 
@@ -269,9 +281,11 @@ function startGame() {
     hud.classList.remove('hidden');
     road.classList.add('moving');
 
-    lives = 5; partsCollected = 0; currentLane = 1;
+    lives = 5; partsCollected = 0;
+    targetLane = 1; playerVisualLane = 1.0;
     gameSpeed = 3.5; activeEntities = []; spawnTimer = 0;
     questionMode = false; currentQuestion = null;
+    lastQuestionTime = Date.now() - 14000; // First question at ~6s, then every 20s
     correctCombo = 0; isJumping = false; isPaused = false;
     currentForm = 'box'; currentScore = 0;
 
@@ -325,20 +339,26 @@ function spawnQuestionGates() {
 
 function positionEntity(ent) {
     const sceneH = document.getElementById('scene').offsetHeight;
+    const vw = window.innerWidth;
     const p = Math.max(0, Math.min(1, ent.progress));
     const topHorizonBottomPx = sceneH * (1 - HORIZON_Y_FRAC);
     const entityBottom = topHorizonBottomPx - p * (topHorizonBottomPx - PLAYER_BOTTOM_PX);
     const entityCX = getLaneScreenX(ent.lane, p);
     const scale = 0.45 + p * 0.55;
-    const baseW = ent.type === 'gate' ? 105 : 75;
-    const baseH = ent.type === 'gate' ? 70  : 65;
+    // Gate/obstacle dimensions — tuned to fit within lane spread
+    const baseW = ent.type === 'gate'
+        ? Math.max(70, Math.min(100, vw * 0.18))
+        : Math.max(50, Math.min(70, vw * 0.15));
+    const baseH = ent.type === 'gate'
+        ? Math.max(50, Math.min(68, vw * 0.14))
+        : Math.max(45, Math.min(60, vw * 0.13));
     const w = baseW * scale;
     const h = baseH * scale;
     ent.el.style.width       = `${w}px`;
     ent.el.style.height      = `${h}px`;
     ent.el.style.left        = `${entityCX - w / 2}px`;
     ent.el.style.bottom      = `${entityBottom}px`;
-    ent.el.style.fontSize    = `${scale * 0.95}rem`;
+    ent.el.style.fontSize    = `${scale * (vw <= 480 ? 0.78 : 0.9)}rem`;
     ent.el.style.borderWidth = `${Math.max(2, Math.round(scale * 3))}px`;
     ent.el.style.opacity     = p < 0.04 ? (p / 0.04) : 1;
 }
@@ -427,13 +447,27 @@ function endGame() {
 function gameLoop() {
     if (!isRunning || isPaused) return;
 
+    // Smooth LERP player movement towards targetLane
+    if (Math.abs(targetLane - playerVisualLane) > 0.001) {
+        playerVisualLane += (targetLane - playerVisualLane) * 0.25;
+        updatePlayerPosition();
+    } else if (playerVisualLane !== targetLane) {
+        playerVisualLane = targetLane;
+        updatePlayerPosition();
+    }
+
     spawnTimer++;
     const effectiveSpeed = questionMode ? gameSpeed * 0.35 : gameSpeed;
+    const now = Date.now();
 
-    if (!questionMode && spawnTimer > 130) {
+    if (!questionMode && spawnTimer > 120) {
         spawnTimer = 0;
-        if (Math.random() < 0.35) spawnQuestionGates();
-        else spawnObstacle();
+        // Spawn question gates every 20 seconds (20,000 ms)
+        if (now - lastQuestionTime >= 20000) {
+            spawnQuestionGates();
+        } else {
+            spawnObstacle();
+        }
     }
 
     for (let i = activeEntities.length - 1; i >= 0; i--) {
@@ -442,24 +476,34 @@ function gameLoop() {
         positionEntity(ent);
 
         if (ent.progress > 1.08) {
+            if (ent.type === 'obstacle') {
+                // Successfully dodged obstacle: award +10 points!
+                currentScore += 10;
+                updateHUD();
+                const entX = getLaneScreenX(ent.lane, 1);
+                const sceneRect = document.getElementById('scene').getBoundingClientRect();
+                showScorePopup(10, entX, sceneRect.height - 100);
+            }
             ent.el.remove();
             activeEntities.splice(i, 1);
             if (ent.type === 'gate') {
                 questionMode = false;
                 questionDisplay.classList.add('hidden');
                 spawnTimer = 0;
+                lastQuestionTime = Date.now();
             }
             continue;
         }
 
         // Collision detection
-        if (ent.progress >= 0.94 && ent.progress <= 1.03 && ent.lane === currentLane) {
+        if (ent.progress >= 0.94 && ent.progress <= 1.03 && ent.lane === targetLane) {
             const hit = ent;
 
             if (hit.type === 'gate') {
                 questionMode = false;
                 questionDisplay.classList.add('hidden');
                 spawnTimer = 0;
+                lastQuestionTime = Date.now();
 
                 const gateEl = hit.correct ? hit.el : null;
                 activeEntities.filter(e => e.type === 'gate').forEach(e => e.el.remove());
