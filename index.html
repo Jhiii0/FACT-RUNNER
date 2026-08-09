@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Fact Runner: School Hallway Dash</title>
-    <meta name="description" content="Help Vantor run down the school hallway, answer questions, evolve from Box to Robot to Human!">
+    <title>Fact Runner: Loot &amp; Learn</title>
+    <meta name="description" content="Run through the school hallway, answer questions, and evolve from Box to Robot to Human in Fact Runner: Loot &amp; Learn!">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,11 +13,11 @@
 <div id="main-menu" class="glass-panel">
     <div class="menu-header">
         <div class="menu-icon">🏫</div>
-        <h1>Fact Runner:<br>Hallway Dash</h1>
+        <h1>Fact Runner:<br>Loot &amp; Learn</h1>
         <div class="high-score-badge">🏆 High Score: <span id="menu-high-score">0</span></div>
     </div>
     <p class="menu-subtitle">Run through the school hallway! Answer questions correctly to evolve from 📦 Box → 🤖 Robot → 🧍 Human!</p>
-    
+
     <h3 class="section-label">Select Learning Zone</h3>
     <div class="zone-selector" id="zone-selector">
         <button class="zone-btn selected" data-zone="mathematics">📐 Math</button>
@@ -26,7 +26,7 @@
         <button class="zone-btn" data-zone="technology">💻 Tech</button>
         <button class="zone-btn full-width" data-zone="randomized">🎲 All Subjects</button>
     </div>
-    <button id="start-btn" class="primary-btn">🚀 START HALLWAY RUN</button>
+    <button id="start-btn" class="primary-btn">🚀 START RUN</button>
 </div>
 
 <!-- PAUSE MENU OVERLAY -->
@@ -55,37 +55,38 @@
     <button id="main-menu-btn" class="primary-btn">Main Menu</button>
 </div>
 
-<!-- HUD -->
+<!-- HUD (mobile-optimised two-row layout) -->
 <div id="hud" class="hidden">
-    <div class="hud-card lives-card">
-        <span class="hud-label">LIVES</span>
-        <div id="lives-display"></div>
+    <!-- Row 1: Lives | Score | Pause -->
+    <div class="hud-row hud-row-top">
+        <div class="hud-card lives-card">
+            <span class="hud-label">LIVES</span>
+            <div id="lives-display"></div>
+        </div>
+        <div class="hud-card score-card">
+            <span class="hud-label">SCORE</span>
+            <div id="score-display">0</div>
+        </div>
+        <button id="hud-pause-btn" class="hud-pause-btn" title="Pause (P)">⏸️</button>
     </div>
-
-    <div class="hud-card score-card">
-        <span class="hud-label">SCORE</span>
-        <div id="score-display">0</div>
-    </div>
-    
-    <div class="hud-card combo-card" id="combo-card">
-        <span class="hud-label">STREAK</span>
-        <div id="combo-display">Combo: 0</div>
-        <div id="form-badge" class="form-badge box-badge">📦 BOX</div>
-    </div>
-    
-    <div class="hud-card parts-card">
-        <span class="hud-label">RESTORE METER</span>
-        <div id="parts-container">
-            <div class="human-part" id="part-0"></div>
-            <div class="human-part" id="part-1"></div>
-            <div class="human-part" id="part-2"></div>
-            <div class="human-part" id="part-3"></div>
-            <div class="human-part" id="part-4"></div>
+    <!-- Row 2: Combo/Form | Restore Meter -->
+    <div class="hud-row hud-row-bottom">
+        <div class="hud-card combo-card">
+            <span class="hud-label">STREAK</span>
+            <div id="combo-display">Combo: x0</div>
+            <div id="form-badge" class="form-badge box-badge">📦 BOX</div>
+        </div>
+        <div class="hud-card parts-card">
+            <span class="hud-label">RESTORE</span>
+            <div id="parts-container">
+                <div class="human-part" id="part-0"></div>
+                <div class="human-part" id="part-1"></div>
+                <div class="human-part" id="part-2"></div>
+                <div class="human-part" id="part-3"></div>
+                <div class="human-part" id="part-4"></div>
+            </div>
         </div>
     </div>
-
-    <!-- Pause Button on HUD -->
-    <button id="hud-pause-btn" class="hud-pause-btn" title="Pause Game (P)">⏸️</button>
 </div>
 
 <!-- EVOLUTION NOTIFICATION BANNER -->
@@ -94,7 +95,7 @@
         <div class="evo-icon" id="evo-icon">🤖</div>
         <div class="evo-text">
             <h2 id="evo-title">EVOLUTION!</h2>
-            <p id="evo-desc">Transformed into Robot Mode!</p>
+            <p id="evo-desc">Transformed!</p>
         </div>
     </div>
 </div>
@@ -102,19 +103,19 @@
 <!-- QUESTION BANNER -->
 <div id="question-display" class="hidden"></div>
 
-<!-- GAME WORLD (REALISTIC SCHOOL HALLWAY CORRIDOR) -->
+<!-- GAME WORLD -->
 <div id="game-container" class="hidden">
-    <!-- Ceiling Grid & Recessed Fluorescent Lights -->
+    <!-- Ceiling -->
     <div id="hallway-ceiling">
         <div class="ceiling-light-track">
-            <div class="light-fixture fixture-1"></div>
-            <div class="light-fixture fixture-2"></div>
-            <div class="light-fixture fixture-3"></div>
+            <div class="light-fixture"></div>
+            <div class="light-fixture"></div>
+            <div class="light-fixture"></div>
         </div>
-        <div class="hallway-sign">🏫 SCHOOL HALLWAY CORRIDOR</div>
+        <div class="hallway-sign">🏫 FACT RUNNER: LOOT &amp; LEARN</div>
     </div>
 
-    <!-- Back Horizon Wall (Seals Corridor End) -->
+    <!-- Back Horizon Wall -->
     <div id="hallway-back-wall">
         <div class="back-door">
             <div class="back-door-window">ROOM 100</div>
@@ -122,7 +123,7 @@
         </div>
     </div>
 
-    <!-- 3D Standing Left Wall with Lockers & Doors -->
+    <!-- Left Wall -->
     <div id="wall-left">
         <div class="wall-surface">
             <div class="lockers-group">
@@ -138,7 +139,7 @@
         </div>
     </div>
 
-    <!-- 3D Standing Right Wall with Lockers & Doors -->
+    <!-- Right Wall -->
     <div id="wall-right">
         <div class="wall-surface">
             <div class="lockers-group">
@@ -154,24 +155,17 @@
         </div>
     </div>
 
-    <!-- 3D Scene View (Behind & Above Camera POV) -->
+    <!-- 3D Scene -->
     <div id="scene">
         <div id="ground"></div>
-
-        <!-- 3 Fixed Tracks Perspective Floor -->
         <div id="track-wrapper">
-            <div id="road">
-                <div class="floor-reflection"></div>
-            </div>
+            <div id="road"></div>
         </div>
-
-        <!-- Entities Container (Obstacles & Choice Gates) -->
         <div id="entities-container"></div>
 
         <!-- Player Character -->
         <div id="player-wrap">
             <div id="player" class="form-box">
-                <!-- Hero Aura -->
                 <div class="hero-aura"></div>
 
                 <!-- BOX FORM -->
@@ -184,9 +178,7 @@
                             <div class="box-mouth"></div>
                         </div>
                     </div>
-                    <div class="box-body">
-                        <div class="box-stamp">FRAGILE 📦</div>
-                    </div>
+                    <div class="box-body"><div class="box-stamp">FRAGILE 📦</div></div>
                     <div class="box-legs">
                         <div class="box-leg left"></div>
                         <div class="box-leg right"></div>
