@@ -249,18 +249,18 @@ button:active { transform: scale(0.96); }
 /* ─── BACK HORIZON WALL ──────────────────────────────── */
 #hallway-back-wall {
     position: absolute;
-    top: 26%; left: 50%;
+    bottom: 56%; left: 50%;
     transform: translateX(-50%);
-    width: clamp(180px, 35vw, 340px);
-    height: clamp(100px, 18vh, 170px);
-    background: linear-gradient(to bottom, #1e293b, #0f172a);
-    border: 3px solid rgba(59, 130, 246, 0.4);
-    border-radius: 8px;
-    z-index: 1;
+    width: auto;
+    height: auto;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    z-index: 3;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
-    box-shadow: 0 0 50px rgba(59, 130, 246, 0.3);
+    pointer-events: none;
 }
 
 .back-door {
@@ -418,52 +418,57 @@ button:active { transform: scale(0.96); }
 #ground {
     position: absolute;
     bottom: 0; left: 0;
-    width: 100%; height: 74%;
-    background: #0f172a;
+    width: 100%; height: 56%;
+    background: #090d16;
     background-image:
-        linear-gradient(to bottom, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.85) 40%, #0f172a 100%),
-        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(59,130,246,0.1) 40px);
+        radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.35) 0%, rgba(15, 23, 42, 0.85) 60%, #090d16 100%),
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(59,130,246,0.08) 40px);
 }
 
-/* ─── 3-LANE PERSPECTIVE FLOOR ─────────────────────── */
+/* ─── SINGLE CONTINUOUS TRAPEZOID RUNNING FLOOR ──────── */
 #track-wrapper {
     position: absolute;
     bottom: 0; left: 50%;
     width: 100vw;
-    height: 100%;
+    height: 56%;
     transform: translateX(-50%);
     z-index: 2;
+    overflow: hidden;
 }
 
 #road {
     position: absolute;
     bottom: 0;
     left: 50%;
-    width: clamp(650px, 90vw, 1000px);
-    height: 1400px;
-    background: #1e293b;
-    transform-origin: bottom center;
-    transform: translateX(-50%) perspective(500px) rotateX(66deg);
+    width: clamp(520px, 68vw, 840px);
+    height: 100%;
+    background: #111827;
+    transform: translateX(-50%);
+    clip-path: polygon(45% 0%, 55% 0%, 100% 100%, 0% 100%);
     z-index: 2;
-    background-image:
-        linear-gradient(to right,
-            rgba(255,255,255,0.03) 0%,  rgba(255,255,255,0.03) 32%,
-            rgba(59,130,246,0.6) 32%,   rgba(59,130,246,0.6) 34%,
-            rgba(255,255,255,0.03) 34%, rgba(255,255,255,0.03) 66%,
-            rgba(59,130,246,0.6) 66%,   rgba(59,130,246,0.6) 68%,
-            rgba(255,255,255,0.03) 68%, rgba(255,255,255,0.03) 100%),
-        linear-gradient(to bottom, rgba(255,255,255,0.12) 2px, transparent 2px);
-    background-size: 100% 100%, 100% 90px;
+    background-image: linear-gradient(to bottom, transparent 58px, rgba(255, 255, 255, 0.08) 58px, rgba(255, 255, 255, 0.08) 60px);
+    background-size: 100% 60px;
+}
+
+#road-side-borders {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: clamp(520px, 68vw, 840px);
+    height: 100%;
+    z-index: 4;
+    pointer-events: none;
 }
 
 #road.moving {
-    animation: hallwayTileScroll 0.4s linear infinite;
+    animation: walkTileScroll 0.6s linear infinite;
 }
 
-@keyframes hallwayTileScroll {
-    from { background-position: 0 0, 0 0; }
-    to   { background-position: 0 0, 0 90px; }
+@keyframes walkTileScroll {
+    from { background-position: 0 0; }
+    to   { background-position: 0 60px; }
 }
+
 
 /* ─── HUD (TWO-ROW MOBILE-FIRST LAYOUT) ─────────────── */
 #hud {
@@ -749,19 +754,89 @@ button:active { transform: scale(0.96); }
 }
 
 .obstacle {
-    background: linear-gradient(135deg, #dc2626, #991b1b);
+    position: absolute !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    padding: 2px 4px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.7);
     border: 3px solid #fca5a5;
-    box-shadow: 0 8px 20px rgba(220,38,38,0.6);
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    z-index: 15;
+    animation: obstaclePulse 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes obstaclePulse {
+    from { transform: scale(1); }
+    to   { transform: scale(1.03); }
+}
+
+.obstacle .obs-shadow {
+    position: absolute;
+    bottom: -8px;
+    left: 10%;
+    width: 80%;
+    height: 8px;
+    background: rgba(0,0,0,0.55);
+    border-radius: 50%;
+    filter: blur(3px);
+    z-index: -1;
+}
+
+.obs-icon {
+    font-size: 1.1em;
+    line-height: 1;
+}
+
+.obs-label {
+    font-size: 0.48em;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    color: #fef08a;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+    margin-top: 1px;
+    text-transform: uppercase;
+}
+
+.obs-caution {
+    background: linear-gradient(135deg, #d97706, #b45309);
+    border-color: #fde047;
+    box-shadow: 0 6px 20px rgba(217,119,6,0.7);
+}
+
+.obs-barrier {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    border-color: #fca5a5;
+    box-shadow: 0 6px 20px rgba(220,38,38,0.7);
+}
+
+.obs-box {
+    background: linear-gradient(135deg, #854d0e, #713f12);
+    border-color: #fef08a;
+    box-shadow: 0 6px 20px rgba(133,77,14,0.7);
+}
+
+.obs-barrel {
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    border-color: #7dd3fc;
+    box-shadow: 0 6px 20px rgba(2,132,199,0.7);
 }
 
 .gate {
+    position: absolute !important;
+    z-index: 15;
     background: linear-gradient(135deg, rgba(30,58,138,0.95), rgba(37,99,235,0.95));
     border: 3px solid #60a5fa;
     box-shadow: 0 8px 25px rgba(59,130,246,0.6), inset 0 0 15px rgba(96,165,250,0.3);
-    padding: 5px 8px;
+    padding: 3px 5px;
     text-align: center;
     line-height: 1.2;
     backdrop-filter: blur(10px);
+    border-radius: 12px;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .gate-lane-tag {
@@ -871,10 +946,9 @@ button:active { transform: scale(0.96); }
         padding: 2px 8px;
     }
 
-    /* Back wall shrink */
+    /* Back wall container */
     #hallway-back-wall {
-        width: clamp(120px, 30vw, 240px);
-        height: clamp(70px, 14vh, 130px);
+        bottom: 56%;
     }
 }
 

@@ -33,22 +33,19 @@ const BASE_POINTS        = 100;   // points per correct answer
 const COMBO_BONUS_PER    = 25;    // extra points per combo level
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
-const HORIZON_Y_FRAC = 0.26;
+const HORIZON_Y_FRAC = 0.44; // Exit door threshold base (56% from screen bottom)
 const PLAYER_BOTTOM_PX = 22;
 
 function getLaneScreenX(lane, progress = 1) {
     const cx = window.innerWidth / 2;
-    const vw = window.innerWidth;
-    // Calculate 3D perspective lane spread
-    // maxSpread at progress = 1 (bottom of screen near player)
-    const maxSpread = vw <= 480
-        ? Math.min(vw * 0.34, 150)
-        : Math.min(vw * 0.28, 280);
-        
-    // Perspective spread factor: at progress = 0 (horizon door), spread is ~35% of maxSpread
-    const spreadFactor = 0.35 + progress * 0.65;
-    const currentSpread = maxSpread * spreadFactor;
-    return cx + (lane - 1) * currentSpread;
+    const roadEl = document.getElementById('road');
+    const roadW = roadEl ? roadEl.offsetWidth : Math.min(window.innerWidth * 0.68, 820);
+    
+    // Polygon clip-path geometry: 10% width ratio at door threshold (p=0), 100% at player feet (p=1)
+    const pDepth = Math.pow(Math.max(0, Math.min(1, progress)), 1.25);
+    const polySpreadFactor = 0.10 + pDepth * 0.90;
+    const maxSpread = (roadW * 0.335) * polySpreadFactor;
+    return cx + (lane - 1) * maxSpread;
 }
 
 // ─── GAME STATE ───────────────────────────────────────────────────────────────
@@ -90,14 +87,12 @@ function shuffleArray(arr) {
 }
 
 function getNextQuestion(zone) {
-    // For 'randomized' pick random zone
     let resolvedZone = zone;
     if (zone === 'randomized') {
         const keys = Object.keys(questions);
         resolvedZone = keys[Math.floor(Math.random() * keys.length)];
     }
 
-    // Build or refill the deck for this zone
     if (!questionDecks[resolvedZone] || questionDecks[resolvedZone].length === 0) {
         questionDecks[resolvedZone] = shuffleArray(questions[resolvedZone]);
     }
@@ -105,14 +100,12 @@ function getNextQuestion(zone) {
     return questionDecks[resolvedZone].pop();
 }
 
-// ─── UPDATE HIGH SCORE DISPLAY ON MENU ───────────────────────────────────────
 function refreshMenuHighScore() {
     const el = document.getElementById('menu-high-score');
     if (el) el.textContent = highScore.toLocaleString();
 }
 refreshMenuHighScore();
 
-// ─── EVENT LISTENERS ──────────────────────────────────────────────────────────
 zoneBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         zoneBtns.forEach(b => b.classList.remove('selected'));
@@ -166,7 +159,6 @@ window.addEventListener('resize', () => {
     }
 });
 
-// ─── KEYBOARD & TOUCH CONTROLS ────────────────────────────────────────────────
 window.addEventListener('keydown', e => {
     if (e.key === 'p' || e.key === 'P') {
         if (isRunning) { togglePause(); return; }
@@ -214,7 +206,6 @@ window.addEventListener('touchend', e => {
     } else if (dy < -30) doJump();
 }, { passive: true });
 
-// ─── PLAYER ───────────────────────────────────────────────────────────────────
 function updatePlayerPosition() {
     const x = getLaneScreenX(playerVisualLane, 1) - 30;
     playerWrap.style.left = `${x}px`;
@@ -227,7 +218,6 @@ function doJump() {
     setTimeout(() => { isJumping = false; playerEl.classList.remove('jumping'); }, 550);
 }
 
-// ─── CHARACTER EVOLUTION SYSTEM ──────────────────────────────────────────────
 function updateCharacterForm() {
     let newForm = 'box';
     if (correctCombo >= 10) newForm = 'human';
@@ -261,18 +251,16 @@ function showEvolutionBanner(form) {
     setTimeout(() => evolutionBanner.classList.add('hidden'), 2200);
 }
 
-// ─── SCORE POPUP ANIMATION ────────────────────────────────────────────────────
 function showScorePopup(points, x, y) {
     const popup = document.createElement('div');
     popup.className = 'score-popup';
-    popup.textContent = `+${points}`;
+    popup.textContent = `${points}`;
     popup.style.left = `${x}px`;
     popup.style.top = `${y}px`;
     document.getElementById('scene').appendChild(popup);
     setTimeout(() => popup.remove(), 900);
 }
 
-// ─── GAME START ───────────────────────────────────────────────────────────────
 function startGame() {
     mainMenu.classList.add('hidden');
     pauseMenu.classList.add('hidden');
@@ -285,11 +273,10 @@ function startGame() {
     targetLane = 1; playerVisualLane = 1.0;
     gameSpeed = 3.5; activeEntities = []; spawnTimer = 0;
     questionMode = false; currentQuestion = null;
-    lastQuestionTime = Date.now() - 14000; // First question at ~6s, then every 20s
+    lastQuestionTime = Date.now() - 14000;
     correctCombo = 0; isJumping = false; isPaused = false;
     currentForm = 'box'; currentScore = 0;
 
-    // Reset decks so no questions repeat in the new run
     questionDecks = {};
 
     entitiesContainer.innerHTML = '';
@@ -304,12 +291,18 @@ function startGame() {
     rafId = requestAnimationFrame(gameLoop);
 }
 
-// ─── ENTITIES & 3D PATH POSITIONING ─────────────────────────────────────────
 function spawnObstacle() {
     const lane = Math.floor(Math.random() * 3);
+    const types = [
+        { icon: '⚠️', name: 'CAUTION', cls: 'obs-caution' },
+        { icon: '🚧', name: 'BARRIER', cls: 'obs-barrier' },
+        { icon: '📦', name: 'HAZARD', cls: 'obs-box' },
+        { icon: '🛢️', name: 'DANGER', cls: 'obs-barrel' }
+    ];
+    const obsType = types[Math.floor(Math.random() * types.length)];
     const el = document.createElement('div');
-    el.className = 'entity obstacle';
-    el.innerHTML = `<span>🚧</span>`;
+    el.className = `entity obstacle ${obsType.cls}`;
+    el.innerHTML = `<span class="obs-icon">${obsType.icon}</span><span class="obs-label">${obsType.name}</span><div class="obs-shadow"></div>`;
     entitiesContainer.appendChild(el);
     activeEntities.push({ el, lane, type: 'obstacle', progress: 0 });
 }
@@ -341,26 +334,39 @@ function positionEntity(ent) {
     const sceneH = document.getElementById('scene').offsetHeight;
     const vw = window.innerWidth;
     const p = Math.max(0, Math.min(1, ent.progress));
-    const topHorizonBottomPx = sceneH * (1 - HORIZON_Y_FRAC);
-    const entityBottom = topHorizonBottomPx - p * (topHorizonBottomPx - PLAYER_BOTTOM_PX);
+    
+    // Continuous floor Y curve: p=0 at exit door threshold (38% from bottom), p=1 at player feet (22px)
+    const horizonYPx = sceneH * (1 - HORIZON_Y_FRAC);
+    const pDepth = Math.pow(p, 1.25);
+    const entityBottom = horizonYPx - pDepth * (horizonYPx - PLAYER_BOTTOM_PX);
+    
+    // Continuous floor X center following lane tracks inside the trapezoid
     const entityCX = getLaneScreenX(ent.lane, p);
-    const scale = 0.45 + p * 0.55;
-    // Gate/obstacle dimensions — tuned to fit within lane spread
-    const baseW = ent.type === 'gate'
-        ? Math.max(70, Math.min(100, vw * 0.18))
-        : Math.max(50, Math.min(70, vw * 0.15));
-    const baseH = ent.type === 'gate'
-        ? Math.max(50, Math.min(68, vw * 0.14))
-        : Math.max(45, Math.min(60, vw * 0.13));
-    const w = baseW * scale;
-    const h = baseH * scale;
+    
+    // Scale matches trapezoid width: 0.20 at door threshold, 1.0 at player feet
+    const scale = 0.20 + pDepth * 0.80;
+    
+    const roadEl = document.getElementById('road');
+    const roadW = roadEl ? roadEl.offsetWidth : Math.min(vw * 0.68, 820);
+    const currentLaneW = (roadW * 0.335) * (0.10 + pDepth * 0.90);
+    const maxEntityW = currentLaneW * 0.90;
+    
+    let baseW = ent.type === 'gate' ? Math.min(220, maxEntityW / scale) : Math.min(75, maxEntityW / scale);
+    let baseH = ent.type === 'gate' ? Math.min(85, baseW * 0.45) : Math.min(58, baseW * 0.82);
+
+    const w = Math.max(ent.type === 'gate' ? 40 : 26, baseW * scale);
+    const h = Math.max(ent.type === 'gate' ? 30 : 22, baseH * scale);
+
     ent.el.style.width       = `${w}px`;
     ent.el.style.height      = `${h}px`;
     ent.el.style.left        = `${entityCX - w / 2}px`;
     ent.el.style.bottom      = `${entityBottom}px`;
-    ent.el.style.fontSize    = `${scale * (vw <= 480 ? 0.78 : 0.9)}rem`;
+    
+    let fontMultiplier = ent.type === 'gate' ? 1.6 : 0.88;
+    if (vw <= 480) fontMultiplier = ent.type === 'gate' ? 1.3 : 0.72;
+    ent.el.style.fontSize    = `${scale * fontMultiplier}rem`;
     ent.el.style.borderWidth = `${Math.max(2, Math.round(scale * 3))}px`;
-    ent.el.style.opacity     = p < 0.04 ? (p / 0.04) : 1;
+    ent.el.style.opacity     = p < 0.03 ? (p / 0.03) : 1;
 }
 
 // ─── HUD UPDATE ───────────────────────────────────────────────────────────────
@@ -457,7 +463,7 @@ function gameLoop() {
     }
 
     spawnTimer++;
-    const effectiveSpeed = questionMode ? gameSpeed * 0.35 : gameSpeed;
+    const effectiveSpeed = questionMode ? gameSpeed * 0.60 : gameSpeed;
     const now = Date.now();
 
     if (!questionMode && spawnTimer > 120) {
@@ -482,7 +488,7 @@ function gameLoop() {
                 updateHUD();
                 const entX = getLaneScreenX(ent.lane, 1);
                 const sceneRect = document.getElementById('scene').getBoundingClientRect();
-                showScorePopup(10, entX, sceneRect.height - 100);
+                showScorePopup('⚡ +10 DODGED!', entX, sceneRect.height - 100);
             }
             ent.el.remove();
             activeEntities.splice(i, 1);
