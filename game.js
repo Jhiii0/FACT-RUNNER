@@ -28,6 +28,59 @@ const resumeBtn      = document.getElementById('resume-btn');
 const pauseRestartBtn= document.getElementById('pause-restart-btn');
 const pauseMenuBtn   = document.getElementById('pause-menu-btn');
 
+// ─── TUTORIAL REFS ────────────────────────────────────────────────────────────
+const tutorialScreen = document.getElementById('tutorial-screen');
+const tutPlayBtn     = document.getElementById('tut-play-btn');
+const tutSkipBtn     = document.getElementById('tut-skip-btn');
+const tutNextBtn     = document.getElementById('tut-next-btn');
+const tutBackBtn     = document.getElementById('tut-back-btn');
+
+const TUT_TOTAL_STEPS = 6;
+let currentTutStep = 0;
+
+function tutGoToStep(step, direction = 'forward') {
+    // Hide current slide
+    const prevSlide = document.getElementById(`tut-slide-${currentTutStep}`);
+    if (prevSlide) prevSlide.classList.remove('active', 'slide-back');
+
+    currentTutStep = Math.max(0, Math.min(TUT_TOTAL_STEPS - 1, step));
+
+    // Show new slide with direction animation
+    const nextSlide = document.getElementById(`tut-slide-${currentTutStep}`);
+    if (nextSlide) {
+        nextSlide.classList.remove('active', 'slide-back');
+        void nextSlide.offsetWidth; // reflow
+        if (direction === 'back') nextSlide.classList.add('slide-back');
+        nextSlide.classList.add('active');
+    }
+
+    // Update dots
+    document.querySelectorAll('.tut-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentTutStep);
+    });
+
+    // Back button visibility
+    if (tutBackBtn) tutBackBtn.style.opacity = currentTutStep === 0 ? '0.3' : '1';
+    if (tutBackBtn) tutBackBtn.style.pointerEvents = currentTutStep === 0 ? 'none' : 'auto';
+
+    // Next/Play visibility — last step hides Next
+    const isLastStep = currentTutStep === TUT_TOTAL_STEPS - 1;
+    if (tutNextBtn) tutNextBtn.style.display = isLastStep ? 'none' : '';
+}
+
+function showTutorial() {
+    mainMenu.classList.add('hidden');
+    if (tutorialScreen) {
+        tutorialScreen.classList.remove('hidden');
+        currentTutStep = -1; // force fresh render
+        tutGoToStep(0);
+    }
+}
+
+function closeTutorial() {
+    if (tutorialScreen) tutorialScreen.classList.add('hidden');
+}
+
 // ─── SCORING CONSTANTS ────────────────────────────────────────────────────────
 const BASE_POINTS        = 100;   // points per correct answer
 const COMBO_BONUS_PER    = 25;    // extra points per combo level
@@ -114,7 +167,40 @@ zoneBtns.forEach(btn => {
     });
 });
 
-document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('start-btn').addEventListener('click', () => {
+    const hasSeenTutorial = localStorage.getItem('factRunnerTutorialSeen');
+    if (!hasSeenTutorial) {
+        localStorage.setItem('factRunnerTutorialSeen', '1');
+        showTutorial();
+    } else {
+        startGame();
+    }
+});
+
+if (tutPlayBtn) tutPlayBtn.addEventListener('click', () => { closeTutorial(); startGame(); });
+if (tutSkipBtn) tutSkipBtn.addEventListener('click', () => {
+    closeTutorial();
+    mainMenu.classList.remove('hidden');
+});
+if (tutNextBtn) tutNextBtn.addEventListener('click', () => {
+    if (currentTutStep < TUT_TOTAL_STEPS - 1) tutGoToStep(currentTutStep + 1, 'forward');
+});
+if (tutBackBtn) tutBackBtn.addEventListener('click', () => {
+    if (currentTutStep > 0) tutGoToStep(currentTutStep - 1, 'back');
+});
+
+document.querySelectorAll('.tut-dot').forEach((dot, idx) => {
+    dot.addEventListener('click', () => {
+        const dir = idx > currentTutStep ? 'forward' : 'back';
+        tutGoToStep(idx, dir);
+    });
+    dot.style.cursor = 'pointer';
+});
+
+const tutorialBtn = document.getElementById('tutorial-btn');
+if (tutorialBtn) tutorialBtn.addEventListener('click', showTutorial);
+
+
 
 document.getElementById('restart-btn').addEventListener('click', () => {
     gameOverScreen.classList.add('hidden');
@@ -175,6 +261,13 @@ function pauseGame() {
     if (!isRunning) return;
     isPaused = true;
     road.classList.remove('moving');
+    // Populate pause stats
+    const pScore = document.getElementById('pause-score');
+    const pCombo = document.getElementById('pause-combo');
+    const pLives = document.getElementById('pause-lives');
+    if (pScore) pScore.textContent = currentScore.toLocaleString();
+    if (pCombo) pCombo.textContent = correctCombo;
+    if (pLives) pLives.textContent = lives;
     pauseMenu.classList.remove('hidden');
 }
 
@@ -351,19 +444,19 @@ function positionEntity(ent) {
     const currentLaneW = (roadW * 0.335) * (0.10 + pDepth * 0.90);
     const maxEntityW = currentLaneW * 0.90;
     
-    let baseW = ent.type === 'gate' ? Math.min(220, maxEntityW / scale) : Math.min(75, maxEntityW / scale);
-    let baseH = ent.type === 'gate' ? Math.min(85, baseW * 0.45) : Math.min(58, baseW * 0.82);
+    let baseW = ent.type === 'gate' ? Math.min(220, maxEntityW / scale) : Math.min(100, maxEntityW / scale);
+    let baseH = ent.type === 'gate' ? Math.min(85, baseW * 0.45) : Math.min(76, baseW * 0.82);
 
-    const w = Math.max(ent.type === 'gate' ? 40 : 26, baseW * scale);
-    const h = Math.max(ent.type === 'gate' ? 30 : 22, baseH * scale);
+    const w = Math.max(ent.type === 'gate' ? 40 : 34, baseW * scale);
+    const h = Math.max(ent.type === 'gate' ? 30 : 28, baseH * scale);
 
     ent.el.style.width       = `${w}px`;
     ent.el.style.height      = `${h}px`;
     ent.el.style.left        = `${entityCX - w / 2}px`;
     ent.el.style.bottom      = `${entityBottom}px`;
     
-    let fontMultiplier = ent.type === 'gate' ? 1.6 : 0.88;
-    if (vw <= 480) fontMultiplier = ent.type === 'gate' ? 1.3 : 0.72;
+    let fontMultiplier = ent.type === 'gate' ? 1.6 : 1.1;
+    if (vw <= 480) fontMultiplier = ent.type === 'gate' ? 1.3 : 0.9;
     ent.el.style.fontSize    = `${scale * fontMultiplier}rem`;
     ent.el.style.borderWidth = `${Math.max(2, Math.round(scale * 3))}px`;
     ent.el.style.opacity     = p < 0.03 ? (p / 0.03) : 1;

@@ -10,49 +10,84 @@
 <body>
 
 <!-- MAIN MENU -->
-<div id="main-menu" class="glass-panel">
-    <div class="menu-header">
-        <div class="menu-icon">🏫</div>
-        <h1>Fact Runner:<br>Loot &amp; Learn</h1>
-        <div class="high-score-badge">🏆 High Score: <span id="menu-high-score">0</span></div>
+<div id="main-menu" class="menu-card">
+    <div class="menu-top-bar">
+        <div class="menu-level-badge">🎓 LEARNER</div>
+        <div class="high-score-badge">🏆 <span id="menu-high-score">0</span></div>
     </div>
-    <p class="menu-subtitle">Run through the school hallway! Answer questions correctly to evolve from 📦 Box → 🤖 Robot → 🧍 Human!</p>
 
-    <h3 class="section-label">Select Learning Zone</h3>
-    <div class="zone-selector" id="zone-selector">
-        <button class="zone-btn selected" data-zone="mathematics">📐 Math</button>
-        <button class="zone-btn" data-zone="science">🔬 Science</button>
-        <button class="zone-btn" data-zone="history">📜 History</button>
-        <button class="zone-btn" data-zone="technology">💻 Tech</button>
-        <button class="zone-btn full-width" data-zone="randomized">🎲 All Subjects</button>
+    <div class="menu-title-block">
+        <div class="menu-title-line1">FACT</div>
+        <div class="menu-title-line2">RUNNER</div>
+        <div class="menu-title-sub">LOOT &amp; LEARN</div>
     </div>
-    <button id="start-btn" class="primary-btn">🚀 START RUN</button>
+
+    <p class="menu-subtitle">Run through the school hallway!<br>Answer questions correctly to evolve from<br>📦 Box → 🤖 Robot → 🧍 Human!</p>
+
+    <!-- Evolution Preview -->
+    <div class="evo-preview">
+        <div class="evo-preview-char">
+            <div class="evp-char box-char">📦</div>
+            <div class="evp-label">BOX</div>
+        </div>
+        <div class="evo-arrow">»</div>
+        <div class="evo-preview-char">
+            <div class="evp-char robot-char">🤖</div>
+            <div class="evp-label">ROBOT</div>
+        </div>
+        <div class="evo-arrow">»</div>
+        <div class="evo-preview-char">
+            <div class="evp-char human-char">🧍</div>
+            <div class="evp-label">HUMAN</div>
+        </div>
+    </div>
+    <p class="evo-hint">Evolve by getting high scores!</p>
+
+    <h3 class="section-label">— SELECT LEARNING ZONE —</h3>
+    <div class="zone-selector" id="zone-selector">
+        <button class="zone-btn zone-math selected" data-zone="mathematics">📐 MATH</button>
+        <button class="zone-btn zone-science" data-zone="science">🔬 SCIENCE</button>
+        <button class="zone-btn zone-history" data-zone="history">📜 HISTORY</button>
+        <button class="zone-btn zone-tech" data-zone="technology">💻 TECH</button>
+        <button class="zone-btn zone-all full-width" data-zone="randomized">🎲 ALL SUBJECTS</button>
+    </div>
+
+    <button id="start-btn" class="cta-btn">🏃 START THE CHALLENGE!<span class="cta-sub">RUN · LEARN · EVOLVE</span></button>
+    <button id="tutorial-btn" class="outline-btn">📚 How to Play</button>
 </div>
 
 <!-- PAUSE MENU OVERLAY -->
-<div id="pause-menu" class="glass-panel hidden">
-    <h1>⏸️ Game Paused</h1>
-    <p class="menu-subtitle">Press <strong>'P'</strong> or tap Resume to continue</p>
-    <button id="resume-btn" class="primary-btn">▶ RESUME GAME</button>
-    <button id="pause-restart-btn" class="secondary-btn">🔄 Restart Run</button>
-    <button id="pause-menu-btn" class="secondary-btn">🏠 Main Menu</button>
+<div id="pause-menu" class="menu-card hidden">
+    <div class="pause-header">
+        <div class="pause-icon">✏️</div>
+        <h1>Class Paused!</h1>
+    </div>
+    <p class="menu-subtitle">Take a breather — press <strong>'P'</strong> or tap Resume to continue the lesson!</p>
+    <div class="pause-stats" id="pause-stats">
+        <div class="pause-stat-chip">⭐ <span id="pause-score">0</span> pts</div>
+        <div class="pause-stat-chip">🔥 Combo x<span id="pause-combo">0</span></div>
+        <div class="pause-stat-chip">❤️ <span id="pause-lives">5</span> lives</div>
+    </div>
+    <button id="resume-btn" class="cta-btn">▶ Continue Lesson</button>
+    <button id="pause-restart-btn" class="outline-btn">🔄 Retake the Run</button>
+    <button id="pause-menu-btn" class="outline-btn">🏠 Back to Homeroom</button>
 </div>
 
 <!-- GAME OVER -->
-<div id="game-over" class="glass-panel hidden">
+<div id="game-over" class="menu-card hidden">
     <div id="new-high-score-tag" class="hidden">🏆 NEW HIGH SCORE!</div>
     <h1>💀 Class Dismissed!</h1>
     <p id="go-text"></p>
-    <button id="restart-btn" class="primary-btn">Try Again</button>
-    <button id="go-menu-btn" class="secondary-btn">Main Menu</button>
+    <button id="restart-btn" class="cta-btn">Try Again</button>
+    <button id="go-menu-btn" class="outline-btn">Main Menu</button>
 </div>
 
 <!-- VICTORY -->
-<div id="victory" class="glass-panel hidden">
+<div id="victory" class="menu-card hidden">
     <h1>🎉 Perfect Human!</h1>
     <p>Vantor fully restored into a human student!</p>
     <p>Knowledge Gained: <span id="knowledge-stats">0</span></p>
-    <button id="main-menu-btn" class="primary-btn">Main Menu</button>
+    <button id="main-menu-btn" class="cta-btn">Main Menu</button>
 </div>
 
 <!-- HUD (mobile-optimised two-row layout) -->
@@ -232,6 +267,283 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TUTORIAL SCREEN — 6-Step Sequential Flow
+═══════════════════════════════════════════════════════════ -->
+<div id="tutorial-screen" class="tut-overlay hidden">
+
+    <!-- Step dot indicators -->
+    <div class="tut-dots" id="tut-dots">
+        <span class="tut-dot active" data-step="0"></span>
+        <span class="tut-dot" data-step="1"></span>
+        <span class="tut-dot" data-step="2"></span>
+        <span class="tut-dot" data-step="3"></span>
+        <span class="tut-dot" data-step="4"></span>
+        <span class="tut-dot" data-step="5"></span>
+    </div>
+
+    <!-- Main Tutorial Card Area -->
+    <div class="tut-card-wrapper">
+
+        <!-- ── STEP 0: Character Introduction ── -->
+        <div class="tut-slide active" id="tut-slide-0">
+            <div class="tut-layout-grid">
+                <!-- Left: Big Character -->
+                <div class="tut-left-col">
+                    <div class="tut-char-large">
+                        <div class="tut-box-head">
+                            <div class="tut-tape"></div>
+                            <div class="tut-box-face">
+                                <div class="tut-eye left"></div>
+                                <div class="tut-eye right"></div>
+                                <div class="tut-mouth"></div>
+                            </div>
+                        </div>
+                        <div class="tut-box-body">📦</div>
+                        <div class="tut-box-legs">
+                            <div class="tut-leg left"></div>
+                            <div class="tut-leg right"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right: Speech Bubble + Step Content -->
+                <div class="tut-right-col">
+                    <div class="tut-bubble">
+                        <strong>Hey there! I'm Vantor! 👋</strong>
+                        <p>I'm a cardboard box on a mission to become fully human again — and I need YOUR help!</p>
+                    </div>
+                    <div class="tut-step-body">
+                        <div class="tut-intro-pill-list">
+                            <div class="tut-ipill"><span>📦</span><strong>Start as Box</strong></div>
+                            <div class="tut-ipill"><span>⚡</span><strong>Score Trivia Combos</strong></div>
+                            <div class="tut-ipill"><span>🧍</span><strong>Unlock Human Form</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tut-step-label">STEP 1 OF 6 — MEET YOUR GUIDE</div>
+        </div>
+
+        <!-- ── STEP 1: Game Overview ── -->
+        <div class="tut-slide" id="tut-slide-1">
+            <div class="tut-layout-grid">
+                <!-- Left: Big Character -->
+                <div class="tut-left-col">
+                    <div class="tut-char-large">
+                        <div class="tut-box-head">
+                            <div class="tut-tape"></div>
+                            <div class="tut-box-face">
+                                <div class="tut-eye left"></div>
+                                <div class="tut-eye right"></div>
+                                <div class="tut-mouth"></div>
+                            </div>
+                        </div>
+                        <div class="tut-box-body">📦</div>
+                        <div class="tut-box-legs">
+                            <div class="tut-leg left"></div>
+                            <div class="tut-leg right"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right: Speech Bubble + Evolution Strip -->
+                <div class="tut-right-col">
+                    <div class="tut-bubble">
+                        <strong>Welcome to Fact Runner! 🏫</strong>
+                        <p>Run through the school hallway, dodge obstacles, answer trivia questions, and earn knowledge points to evolve!</p>
+                    </div>
+                    <div class="tut-step-body">
+                        <div class="tut-evo-strip">
+                            <div class="tut-evo-item"><span class="tut-evo-emoji">📦</span><span>Box</span></div>
+                            <span class="tut-evo-arr">→</span>
+                            <div class="tut-evo-item"><span class="tut-evo-emoji">🤖</span><span>Robot</span></div>
+                            <span class="tut-evo-arr">→</span>
+                            <div class="tut-evo-item"><span class="tut-evo-emoji">🧍</span><span>Human</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tut-step-label">STEP 2 OF 6 — THE GAME</div>
+        </div>
+
+        <!-- ── STEP 2: Five Categories ── -->
+        <div class="tut-slide" id="tut-slide-2">
+            <div class="tut-layout-grid">
+                <!-- Left: Big Character -->
+                <div class="tut-left-col">
+                    <div class="tut-char-large">
+                        <div class="tut-box-head">
+                            <div class="tut-tape"></div>
+                            <div class="tut-box-face">
+                                <div class="tut-eye left"></div>
+                                <div class="tut-eye right"></div>
+                                <div class="tut-mouth"></div>
+                            </div>
+                        </div>
+                        <div class="tut-box-body">📦</div>
+                        <div class="tut-box-legs">
+                            <div class="tut-leg left"></div>
+                            <div class="tut-leg right"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right: Speech Bubble + Categories Grid -->
+                <div class="tut-right-col">
+                    <div class="tut-bubble">
+                        <strong>5 Subject Zones! 📚</strong>
+                        <p>Each zone has unique trivia questions. Master all of them to become the ultimate scholar!</p>
+                    </div>
+                    <div class="tut-step-body">
+                        <div class="tut-categories-grid">
+                            <div class="tut-cat tut-cat-math">📐 Math</div>
+                            <div class="tut-cat tut-cat-sci">🔬 Science</div>
+                            <div class="tut-cat tut-cat-hist">📜 History</div>
+                            <div class="tut-cat tut-cat-tech">💻 Tech</div>
+                            <div class="tut-cat tut-cat-all">🎲 All Subjects</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tut-step-label">STEP 3 OF 6 — SUBJECT ZONES</div>
+        </div>
+
+        <!-- ── STEP 3: Movement Tutorial ── -->
+        <div class="tut-slide" id="tut-slide-3">
+            <div class="tut-layout-grid">
+                <!-- Left: Big Character -->
+                <div class="tut-left-col">
+                    <div class="tut-char-large">
+                        <div class="tut-box-head">
+                            <div class="tut-tape"></div>
+                            <div class="tut-box-face">
+                                <div class="tut-eye left"></div>
+                                <div class="tut-eye right"></div>
+                                <div class="tut-mouth"></div>
+                            </div>
+                        </div>
+                        <div class="tut-box-body">📦</div>
+                        <div class="tut-box-legs">
+                            <div class="tut-leg left"></div>
+                            <div class="tut-leg right"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right: Speech Bubble + Lane Diagram -->
+                <div class="tut-right-col">
+                    <div class="tut-bubble">
+                        <strong>Navigate the Hallway! 🏃</strong>
+                        <p>Swipe left/right or use Arrow Keys. Swipe up or press Space to jump over obstacles!</p>
+                    </div>
+                    <div class="tut-step-body">
+                        <div class="tut-lane-demo">
+                            <div class="tut-lane-track">
+                                <div class="tut-lane left-lane">
+                                    <div class="lane-label">⬅ LEFT</div>
+                                    <div class="tut-gate-demo gate-wrong">✗</div>
+                                </div>
+                                <div class="tut-lane center-lane active-lane">
+                                    <div class="lane-label">▲ CENTER</div>
+                                    <div class="tut-gate-demo gate-right">✓</div>
+                                    <div class="tut-player-demo">📦</div>
+                                </div>
+                                <div class="tut-lane right-lane">
+                                    <div class="lane-label">RIGHT ➡</div>
+                                    <div class="tut-gate-demo gate-wrong">✗</div>
+                                </div>
+                            </div>
+                            <div class="tut-move-hint">Swipe or tap arrow keys to switch lanes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tut-step-label">STEP 4 OF 6 — MOVEMENT</div>
+        </div>
+
+        <!-- ── STEP 4: Pause Menu Explanation ── -->
+        <div class="tut-slide" id="tut-slide-4">
+            <div class="tut-layout-grid">
+                <!-- Left: Big Character -->
+                <div class="tut-left-col">
+                    <div class="tut-char-large">
+                        <div class="tut-box-head">
+                            <div class="tut-tape"></div>
+                            <div class="tut-box-face">
+                                <div class="tut-eye left"></div>
+                                <div class="tut-eye right"></div>
+                                <div class="tut-mouth"></div>
+                            </div>
+                        </div>
+                        <div class="tut-box-body">📦</div>
+                        <div class="tut-box-legs">
+                            <div class="tut-leg left"></div>
+                            <div class="tut-leg right"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right: Speech Bubble + Pause Preview -->
+                <div class="tut-right-col">
+                    <div class="tut-bubble">
+                        <strong>Need a Break? ⏸️</strong>
+                        <p>Press <strong>P</strong> or tap the pause button anytime. You can resume, restart, or go back to the main menu!</p>
+                    </div>
+                    <div class="tut-step-body">
+                        <div class="tut-pause-preview">
+                            <div class="tpp-title">✏️ Class Paused!</div>
+                            <div class="tpp-btn tpp-resume">▶ Continue Lesson</div>
+                            <div class="tpp-btn tpp-sec">🔄 Retake the Run</div>
+                            <div class="tpp-btn tpp-sec">🏠 Back to Homeroom</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tut-step-label">STEP 5 OF 6 — PAUSE MENU</div>
+        </div>
+
+        <!-- ── STEP 5: Ready to Play? ── -->
+        <div class="tut-slide" id="tut-slide-5">
+            <div class="tut-layout-grid">
+                <!-- Left: Big Character Excited -->
+                <div class="tut-left-col">
+                    <div class="tut-char-large tut-char-excited">
+                        <div class="tut-box-head">
+                            <div class="tut-tape"></div>
+                            <div class="tut-box-face">
+                                <div class="tut-eye left"></div>
+                                <div class="tut-eye right"></div>
+                                <div class="tut-mouth tut-mouth-smile"></div>
+                            </div>
+                        </div>
+                        <div class="tut-box-body">📦</div>
+                        <div class="tut-box-legs">
+                            <div class="tut-leg left"></div>
+                            <div class="tut-leg right"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right: Speech Bubble + Ready Launch -->
+                <div class="tut-right-col">
+                    <div class="tut-bubble tut-bubble-ready">
+                        <strong>You're all set! 🌟</strong>
+                        <p>Remember: answer correctly to earn combos and evolve. Good luck out there, scholar!</p>
+                    </div>
+                    <div class="tut-step-body tut-step-ready-body">
+                        <div class="tut-ready-text">Are you ready to start the game?</div>
+                        <button id="tut-play-btn" class="cta-btn tut-play-cta">🚀 LET'S GO!</button>
+                    </div>
+                </div>
+            </div>
+            <div class="tut-step-label">STEP 6 OF 6 — READY?</div>
+        </div>
+
+    </div>
+
+    <!-- Navigation Footer: Back Button on Left, Next Button on Right -->
+    <div class="tut-nav">
+        <button class="tut-back-btn" id="tut-back-btn">← Back</button>
+        <button class="tut-next-btn" id="tut-next-btn">Next →</button>
+    </div>
+    <button id="tut-skip-btn" class="tut-skip-link">Skip Tutorial</button>
 </div>
 
 <script src="questions.js"></script>
