@@ -41,7 +41,7 @@
             <div class="evp-label">HUMAN</div>
         </div>
     </div>
-    <p class="evo-hint">Evolve by getting high scores!</p>
+    <p class="evo-hint">Get 5 consecutive correct answers to evolve!</p>
 
     <h3 class="section-label">— SELECT LEARNING ZONE —</h3>
     <div class="zone-selector" id="zone-selector">
@@ -317,8 +317,8 @@
                     <div class="tut-step-body">
                         <div class="tut-intro-pill-list">
                             <div class="tut-ipill"><span>📦</span><strong>Start as Box</strong></div>
-                            <div class="tut-ipill"><span>⚡</span><strong>Score Trivia Combos</strong></div>
-                            <div class="tut-ipill"><span>🧍</span><strong>Unlock Human Form</strong></div>
+                            <div class="tut-ipill"><span>⚡</span><strong>5x Correct Streak to Evolve</strong></div>
+                            <div class="tut-ipill"><span>🧍</span><strong>Reach Human Form</strong></div>
                         </div>
                     </div>
                 </div>
@@ -326,7 +326,7 @@
             <div class="tut-step-label">STEP 1 OF 6 — MEET YOUR GUIDE</div>
         </div>
 
-        <!-- ── STEP 1: Game Overview ── -->
+        <!-- ── STEP 1: Evolution & Reset Rules ── -->
         <div class="tut-slide" id="tut-slide-1">
             <div class="tut-layout-grid">
                 <!-- Left: Big Character -->
@@ -347,24 +347,62 @@
                         </div>
                     </div>
                 </div>
-                <!-- Right: Speech Bubble + Evolution Strip -->
+                <!-- Right: Speech Bubble + Evolution Rules -->
                 <div class="tut-right-col">
                     <div class="tut-bubble">
-                        <strong>Welcome to Fact Runner! 🏫</strong>
-                        <p>Run through the school hallway, dodge obstacles, answer trivia questions, and earn knowledge points to evolve!</p>
+                        <strong>Evolution &amp; Demotion Rules! ⚡</strong>
+                        <p>Answer consecutively to evolve! But be careful: getting a wrong answer or hitting an obstacle resets your form!</p>
                     </div>
                     <div class="tut-step-body">
-                        <div class="tut-evo-strip">
-                            <div class="tut-evo-item"><span class="tut-evo-emoji">📦</span><span>Box</span></div>
-                            <span class="tut-evo-arr">→</span>
-                            <div class="tut-evo-item"><span class="tut-evo-emoji">🤖</span><span>Robot</span></div>
-                            <span class="tut-evo-arr">→</span>
-                            <div class="tut-evo-item"><span class="tut-evo-emoji">🧍</span><span>Human</span></div>
+                        <div class="tut-evo-rules-container">
+                            <!-- Evolve Card -->
+                            <div class="tut-evo-card tut-card-evolve">
+                                <div class="tut-evo-badge-title">✨ EVOLUTION (5x STREAK PER FORM)</div>
+                                <div class="tut-evo-flow">
+                                    <div class="tut-evo-node">
+                                        <span class="tut-node-emoji">📦</span>
+                                        <span class="tut-node-name">Box</span>
+                                    </div>
+                                    <div class="tut-node-arrow">
+                                        <span class="tut-streak-tag">5x Correct ✓</span>
+                                        <span class="tut-arrow-icon">➔</span>
+                                    </div>
+                                    <div class="tut-evo-node">
+                                        <span class="tut-node-emoji">🤖</span>
+                                        <span class="tut-node-name">Robot</span>
+                                    </div>
+                                    <div class="tut-node-arrow">
+                                        <span class="tut-streak-tag">5x Correct ✓</span>
+                                        <span class="tut-arrow-icon">➔</span>
+                                    </div>
+                                    <div class="tut-evo-node">
+                                        <span class="tut-node-emoji">🧍</span>
+                                        <span class="tut-node-name">Human</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Demote / Reset Card -->
+                            <div class="tut-evo-card tut-card-demote">
+                                <div class="tut-evo-badge-title demote-badge-title">⚠️ MISTAKE RESET (WRONG ANSWER / HIT)</div>
+                                <div class="tut-demote-rows">
+                                    <div class="tut-demote-row">
+                                        <div class="tut-demote-from"><span class="tut-small-emoji">🤖</span> Robot</div>
+                                        <div class="tut-demote-arrow">❌ Wrong Answer ➔</div>
+                                        <div class="tut-demote-to"><span class="tut-small-emoji">📦</span> Box</div>
+                                    </div>
+                                    <div class="tut-demote-row">
+                                        <div class="tut-demote-from"><span class="tut-small-emoji">🧍</span> Human</div>
+                                        <div class="tut-demote-arrow">❌ Wrong Answer ➔</div>
+                                        <div class="tut-demote-to"><span class="tut-small-emoji">🤖</span> Robot</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="tut-step-label">STEP 2 OF 6 — THE GAME</div>
+            <div class="tut-step-label">STEP 2 OF 6 — EVOLUTION &amp; RESET RULES</div>
         </div>
 
         <!-- ── STEP 2: Five Categories ── -->
@@ -525,7 +563,7 @@
                 <div class="tut-right-col">
                     <div class="tut-bubble tut-bubble-ready">
                         <strong>You're all set! 🌟</strong>
-                        <p>Remember: answer correctly to earn combos and evolve. Good luck out there, scholar!</p>
+                        <p>Remember: get 5 consecutive correct answers to evolve, but mistakes reset your form. Good luck out there, scholar!</p>
                     </div>
                     <div class="tut-step-body tut-step-ready-body">
                         <div class="tut-ready-text">Are you ready to start the game?</div>
