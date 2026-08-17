@@ -862,9 +862,20 @@ button:active { transform: scale(0.96); }
 
 /* ─── MOBILE RESPONSIVE OVERRIDES ────────────────────── */
 @media (max-width: 480px) {
-    /* Narrower side walls on small screens */
+    /* Narrower side walls on small screens — thin decorative slivers */
     #wall-left, #wall-right {
-        width: clamp(30px, 10vw, 70px);
+        width: clamp(28px, 8vw, 52px);
+    }
+    /* Reduce the 3D angle on mobile so walls don't appear as wide */
+    #wall-left {
+        transform: perspective(400px) rotateY(28deg);
+    }
+    #wall-right {
+        transform: perspective(400px) rotateY(-28deg);
+    }
+    /* Road fills almost the entire screen on mobile */
+    #road, #road-side-borders {
+        width: clamp(280px, 88vw, 480px);
     }
 
     /* Question banner needs more clearance from HUD */
