@@ -118,6 +118,7 @@ let lastQuestionTime = 0;
 let totalKnowledge = 0;
 let isJumping      = false;
 let correctCombo   = 0;
+let formStreak     = 0;
 let rafId          = null;
 let currentForm    = 'box';
 
@@ -312,19 +313,14 @@ function doJump() {
 }
 
 function updateCharacterForm() {
-    let newForm = 'box';
-    if (correctCombo >= 10) newForm = 'human';
-    else if (correctCombo >= 5) newForm = 'robot';
-
-    if (newForm !== currentForm) {
-        currentForm = newForm;
-        showEvolutionBanner(currentForm);
-    }
-
     playerEl.className = `form-${currentForm}`;
 
-    const badges = { box: ['box-badge', '📦 BOX'], robot: ['robot-badge', '🤖 ROBOT'], human: ['human-badge', '🧍 HUMAN'] };
-    const [cls, label] = badges[currentForm];
+    const badges = {
+        box: ['box-badge', '📦 BOX'],
+        robot: ['robot-badge', '🤖 ROBOT'],
+        human: ['human-badge', '🧍 HUMAN']
+    };
+    const [cls, label] = badges[currentForm] || badges.box;
     formBadge.className = `form-badge ${cls}`;
     formBadge.textContent = label;
 }
@@ -332,7 +328,7 @@ function updateCharacterForm() {
 function showEvolutionBanner(form) {
     const data = {
         robot: ['🤖', 'ROBOT UNLOCKED!', '5x Combo reached! Vantor converted into Robot Mode!'],
-        human: ['🧍', 'HUMAN TRANSFORMED!', '10x Combo streak! Vantor fully restored into Human!']
+        human: ['🧍', 'HUMAN TRANSFORMED!', '5x Combo reached! Vantor fully restored into Human Student!']
     };
     if (!data[form]) return;
     const [icon, title, desc] = data[form];
@@ -367,7 +363,7 @@ function startGame() {
     gameSpeed = 3.5; activeEntities = []; spawnTimer = 0;
     questionMode = false; currentQuestion = null;
     lastQuestionTime = Date.now() - 14000;
-    correctCombo = 0; isJumping = false; isPaused = false;
+    correctCombo = 0; formStreak = 0; isJumping = false; isPaused = false;
     currentForm = 'box'; currentScore = 0;
 
     questionDecks = {};
@@ -482,6 +478,17 @@ function updateHUD() {
 function takeDamage() {
     lives--;
     correctCombo = 0;
+    formStreak = 0;
+
+    // Demotion logic on mistake/damage:
+    // Human -> Robot
+    // Robot -> Box
+    if (currentForm === 'human') {
+        currentForm = 'robot';
+    } else if (currentForm === 'robot') {
+        currentForm = 'box';
+    }
+
     updateCharacterForm();
     updateHUD();
     playerEl.classList.add('hit');
@@ -493,7 +500,21 @@ function collectPart(gateEl) {
     partsCollected++;
     totalKnowledge++;
     correctCombo++;
+    formStreak++;
     localStorage.setItem('vantorParts', totalKnowledge);
+
+    // Evolution logic:
+    // 5 consecutive correct answers as Box -> transform into Robot
+    // 5 consecutive correct answers as Robot -> transform into Human Student
+    if (currentForm === 'box' && formStreak >= 5) {
+        currentForm = 'robot';
+        formStreak = 0;
+        showEvolutionBanner('robot');
+    } else if (currentForm === 'robot' && formStreak >= 5) {
+        currentForm = 'human';
+        formStreak = 0;
+        showEvolutionBanner('human');
+    }
 
     // Award points: base + combo bonus
     const points = BASE_POINTS + (correctCombo - 1) * COMBO_BONUS_PER;
