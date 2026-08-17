@@ -440,7 +440,7 @@ button:active { transform: scale(0.96); }
     position: absolute;
     bottom: 0;
     left: 50%;
-    width: clamp(520px, 68vw, 840px);
+    width: clamp(240px, 68vw, 840px);
     height: 100%;
     background: #111827;
     transform: translateX(-50%);
@@ -454,7 +454,7 @@ button:active { transform: scale(0.96); }
     position: absolute;
     bottom: 0; left: 50%;
     transform: translateX(-50%);
-    width: clamp(520px, 68vw, 840px);
+    width: clamp(240px, 68vw, 840px);
     height: 100%;
     z-index: 4;
     pointer-events: none;
