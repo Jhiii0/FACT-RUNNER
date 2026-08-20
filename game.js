@@ -162,13 +162,17 @@ refreshMenuHighScore();
 
 zoneBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+        const zone = btn.dataset.zone;
+        soundEngine.playZoneSelect(zone);
         zoneBtns.forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
-        currentZone = btn.dataset.zone;
+        currentZone = zone;
     });
+    btn.addEventListener('mouseenter', () => soundEngine.playHover());
 });
 
 document.getElementById('start-btn').addEventListener('click', () => {
+    soundEngine.playStartGame();
     const hasSeenTutorial = localStorage.getItem('factRunnerTutorialSeen');
     if (!hasSeenTutorial) {
         localStorage.setItem('factRunnerTutorialSeen', '1');
@@ -178,20 +182,30 @@ document.getElementById('start-btn').addEventListener('click', () => {
     }
 });
 
-if (tutPlayBtn) tutPlayBtn.addEventListener('click', () => { closeTutorial(); startGame(); });
+// Button hover ticks
+document.querySelectorAll('.cta-btn, .outline-btn, .sound-mute-toggle-btn').forEach(btn => {
+    btn.addEventListener('mouseenter', () => soundEngine.playHover());
+});
+
+if (tutPlayBtn) tutPlayBtn.addEventListener('click', () => { soundEngine.playStartGame(); closeTutorial(); startGame(); });
 if (tutSkipBtn) tutSkipBtn.addEventListener('click', () => {
+    soundEngine.playClick();
     closeTutorial();
     mainMenu.classList.remove('hidden');
+    soundEngine.startMenuBGM();
 });
 if (tutNextBtn) tutNextBtn.addEventListener('click', () => {
+    soundEngine.playClick();
     if (currentTutStep < TUT_TOTAL_STEPS - 1) tutGoToStep(currentTutStep + 1, 'forward');
 });
 if (tutBackBtn) tutBackBtn.addEventListener('click', () => {
+    soundEngine.playClick();
     if (currentTutStep > 0) tutGoToStep(currentTutStep - 1, 'back');
 });
 
 document.querySelectorAll('.tut-dot').forEach((dot, idx) => {
     dot.addEventListener('click', () => {
+        soundEngine.playClick();
         const dir = idx > currentTutStep ? 'forward' : 'back';
         tutGoToStep(idx, dir);
     });
@@ -199,29 +213,33 @@ document.querySelectorAll('.tut-dot').forEach((dot, idx) => {
 });
 
 const tutorialBtn = document.getElementById('tutorial-btn');
-if (tutorialBtn) tutorialBtn.addEventListener('click', showTutorial);
-
-
+if (tutorialBtn) tutorialBtn.addEventListener('click', () => { soundEngine.playClick(); showTutorial(); });
 
 document.getElementById('restart-btn').addEventListener('click', () => {
+    soundEngine.playStartGame();
     gameOverScreen.classList.add('hidden');
     startGame();
 });
 document.getElementById('go-menu-btn').addEventListener('click', () => {
+    soundEngine.playClick();
     gameOverScreen.classList.add('hidden');
     mainMenu.classList.remove('hidden');
+    soundEngine.startMenuBGM();
     refreshMenuHighScore();
 });
 document.getElementById('main-menu-btn').addEventListener('click', () => {
+    soundEngine.playClick();
     victoryScreen.classList.add('hidden');
     mainMenu.classList.remove('hidden');
+    soundEngine.startMenuBGM();
     refreshMenuHighScore();
 });
 
-if (hudPauseBtn) hudPauseBtn.addEventListener('click', togglePause);
-if (resumeBtn) resumeBtn.addEventListener('click', resumeGame);
+if (hudPauseBtn) hudPauseBtn.addEventListener('click', () => { soundEngine.playClick(); togglePause(); });
+if (resumeBtn) resumeBtn.addEventListener('click', () => { soundEngine.playClick(); resumeGame(); });
 if (pauseRestartBtn) {
     pauseRestartBtn.addEventListener('click', () => {
+        soundEngine.playStartGame();
         pauseMenu.classList.add('hidden');
         isPaused = false;
         startGame();
@@ -229,15 +247,51 @@ if (pauseRestartBtn) {
 }
 if (pauseMenuBtn) {
     pauseMenuBtn.addEventListener('click', () => {
+        soundEngine.playClick();
         pauseMenu.classList.add('hidden');
         isPaused = false;
         isRunning = false;
         gameContainer.classList.add('hidden');
         hud.classList.add('hidden');
         mainMenu.classList.remove('hidden');
+        soundEngine.startMenuBGM();
         refreshMenuHighScore();
     });
 }
+
+// ─── SOUND SETTINGS EVENT LISTENERS ──────────────────────────────────────────
+let sliderSoundTimeout = null;
+document.querySelectorAll('.sound-volume-slider').forEach(slider => {
+    slider.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value) / 100;
+        soundEngine.setVolume(val);
+        
+        // Play gentle test tone on drag
+        if (!sliderSoundTimeout) {
+            soundEngine.playSliderTest();
+            sliderSoundTimeout = setTimeout(() => { sliderSoundTimeout = null; }, 140);
+        }
+    });
+});
+
+document.querySelectorAll('.sound-mute-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const muted = soundEngine.toggleMute();
+        if (!muted) {
+            soundEngine.playSliderTest();
+        }
+    });
+});
+
+const hudSoundBtn = document.getElementById('hud-sound-btn');
+if (hudSoundBtn) {
+    hudSoundBtn.addEventListener('click', () => {
+        soundEngine.toggleMute();
+    });
+}
+
+// Sync UI on load
+soundEngine.syncUI();
 
 window.addEventListener('resize', () => {
     if (isRunning) {
@@ -247,6 +301,10 @@ window.addEventListener('resize', () => {
 });
 
 window.addEventListener('keydown', e => {
+    if (e.key === 'm' || e.key === 'M') {
+        soundEngine.toggleMute();
+        return;
+    }
     if (e.key === 'p' || e.key === 'P') {
         if (isRunning) { togglePause(); return; }
     }
@@ -261,6 +319,7 @@ function togglePause() { isPaused ? resumeGame() : pauseGame(); }
 function pauseGame() {
     if (!isRunning) return;
     isPaused = true;
+    soundEngine.pauseBGM();
     road.classList.remove('moving');
     // Populate pause stats
     const pScore = document.getElementById('pause-score');
@@ -275,6 +334,7 @@ function pauseGame() {
 function resumeGame() {
     if (!isRunning) return;
     isPaused = false;
+    soundEngine.resumeBGM();
     pauseMenu.classList.add('hidden');
     road.classList.add('moving');
     if (rafId) cancelAnimationFrame(rafId);
@@ -308,6 +368,7 @@ function updatePlayerPosition() {
 function doJump() {
     if (isJumping) return;
     isJumping = true;
+    soundEngine.playJump();
     playerEl.classList.add('jumping');
     setTimeout(() => { isJumping = false; playerEl.classList.remove('jumping'); }, 550);
 }
@@ -333,6 +394,7 @@ function showEvolutionBanner(form) {
     if (!data[form]) return;
     const [icon, title, desc] = data[form];
     evoIcon.textContent = icon; evoTitle.textContent = title; evoDesc.textContent = desc;
+    soundEngine.playEvolution();
     evolutionBanner.classList.remove('hidden');
     evolutionBanner.style.animation = 'none';
     evolutionBanner.offsetHeight;
@@ -357,6 +419,8 @@ function startGame() {
     gameContainer.classList.remove('hidden');
     hud.classList.remove('hidden');
     road.classList.add('moving');
+
+    soundEngine.startRunnerBGM();
 
     lives = 5; partsCollected = 0;
     targetLane = 1; playerVisualLane = 1.0;
@@ -391,7 +455,7 @@ function spawnObstacle() {
     const obsType = types[Math.floor(Math.random() * types.length)];
     const el = document.createElement('div');
     el.className = `entity obstacle ${obsType.cls}`;
-    el.innerHTML = `<span class="obs-icon">${obsType.icon}</span><span class="obs-label">${obsType.name}</span><div class="obs-shadow"></div>`;
+    el.innerHTML = `<span class="obs-icon">${obsType.icon}</span><div class="obs-shadow"></div>`;
     entitiesContainer.appendChild(el);
     activeEntities.push({ el, lane, type: 'obstacle', progress: 0 });
 }
@@ -440,21 +504,21 @@ function positionEntity(ent) {
     const currentLaneW = (roadW * 0.335) * (0.10 + pDepth * 0.90);
     const maxEntityW = currentLaneW * 0.90;
     
-    let baseW = ent.type === 'gate' ? Math.min(220, maxEntityW / scale) : Math.min(100, maxEntityW / scale);
-    let baseH = ent.type === 'gate' ? Math.min(85, baseW * 0.45) : Math.min(76, baseW * 0.82);
+    let baseW = ent.type === 'gate' ? Math.min(220, maxEntityW / scale) : Math.min(130, maxEntityW / scale);
+    let baseH = ent.type === 'gate' ? Math.min(85, baseW * 0.45) : Math.min(110, baseW * 0.85);
 
-    const w = Math.max(ent.type === 'gate' ? 40 : 34, baseW * scale);
-    const h = Math.max(ent.type === 'gate' ? 30 : 28, baseH * scale);
+    const w = Math.max(ent.type === 'gate' ? 40 : 46, baseW * scale);
+    const h = Math.max(ent.type === 'gate' ? 30 : 46, baseH * scale);
 
     ent.el.style.width       = `${w}px`;
     ent.el.style.height      = `${h}px`;
     ent.el.style.left        = `${entityCX - w / 2}px`;
     ent.el.style.bottom      = `${entityBottom}px`;
     
-    let fontMultiplier = ent.type === 'gate' ? 1.6 : 1.1;
-    if (vw <= 480) fontMultiplier = ent.type === 'gate' ? 1.3 : 0.9;
+    let fontMultiplier = ent.type === 'gate' ? 1.6 : 2.5;
+    if (vw <= 480) fontMultiplier = ent.type === 'gate' ? 1.3 : 2.1;
     ent.el.style.fontSize    = `${scale * fontMultiplier}rem`;
-    ent.el.style.borderWidth = `${Math.max(2, Math.round(scale * 3))}px`;
+    ent.el.style.borderWidth = ent.type === 'gate' ? `${Math.max(2, Math.round(scale * 3))}px` : '0px';
     ent.el.style.opacity     = p < 0.03 ? (p / 0.03) : 1;
 }
 
@@ -479,6 +543,8 @@ function takeDamage() {
     lives--;
     correctCombo = 0;
     formStreak = 0;
+
+    soundEngine.playDamage();
 
     // Demotion logic on mistake/damage:
     // Human -> Robot
@@ -514,6 +580,12 @@ function collectPart(gateEl) {
         currentForm = 'human';
         formStreak = 0;
         showEvolutionBanner('human');
+    } else {
+        if (correctCombo > 1 && correctCombo % 3 === 0) {
+            soundEngine.playStreakBonus();
+        } else {
+            soundEngine.playCorrect();
+        }
     }
 
     // Award points: base + combo bonus
@@ -536,6 +608,8 @@ function endGame() {
     isRunning = false;
     isPaused = false;
     cancelAnimationFrame(rafId);
+    soundEngine.stopBGM();
+    soundEngine.playGameOver();
     road.classList.remove('moving');
     gameContainer.classList.add('hidden');
     hud.classList.add('hidden');
@@ -600,6 +674,7 @@ function gameLoop() {
                 // Successfully dodged obstacle: award +10 points!
                 currentScore += 10;
                 updateHUD();
+                soundEngine.playDodge();
                 const entX = getLaneScreenX(ent.lane, 1);
                 const sceneRect = document.getElementById('scene').getBoundingClientRect();
                 showScorePopup('⚡ +10 DODGED!', entX, sceneRect.height - 100);

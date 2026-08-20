@@ -52,6 +52,19 @@
         <button class="zone-btn zone-all full-width" data-zone="randomized">🎲 ALL SUBJECTS</button>
     </div>
 
+    <!-- Sound Settings Box -->
+    <div class="sound-settings-box">
+        <div class="sound-settings-header">
+            <span class="sound-title">🎵 AUDIO &amp; SOUND FX</span>
+            <button class="sound-mute-toggle-btn" id="menu-mute-btn" title="Toggle Mute (M)">🔊 <span class="mute-btn-text">MUTE</span></button>
+        </div>
+        <div class="volume-slider-row">
+            <span class="volume-icon">🔉</span>
+            <input type="range" class="sound-volume-slider" id="menu-volume-slider" min="0" max="100" value="70">
+            <span class="sound-volume-val" id="menu-volume-val">70%</span>
+        </div>
+    </div>
+
     <button id="start-btn" class="cta-btn">🏃 START THE CHALLENGE!<span class="cta-sub">RUN · LEARN · EVOLVE</span></button>
     <button id="tutorial-btn" class="outline-btn">📚 How to Play</button>
 </div>
@@ -68,6 +81,20 @@
         <div class="pause-stat-chip">🔥 Combo x<span id="pause-combo">0</span></div>
         <div class="pause-stat-chip">❤️ <span id="pause-lives">5</span> lives</div>
     </div>
+
+    <!-- Pause Sound Settings -->
+    <div class="sound-settings-box pause-sound-box">
+        <div class="sound-settings-header">
+            <span class="sound-title">🎵 Sound Volume</span>
+            <button class="sound-mute-toggle-btn" id="pause-mute-btn" title="Toggle Mute (M)">🔊 <span class="mute-btn-text">MUTE</span></button>
+        </div>
+        <div class="volume-slider-row">
+            <span class="volume-icon">🔉</span>
+            <input type="range" class="sound-volume-slider" id="pause-volume-slider" min="0" max="100" value="70">
+            <span class="sound-volume-val" id="pause-volume-val">70%</span>
+        </div>
+    </div>
+
     <button id="resume-btn" class="cta-btn">▶ Continue Lesson</button>
     <button id="pause-restart-btn" class="outline-btn">🔄 Retake the Run</button>
     <button id="pause-menu-btn" class="outline-btn">🏠 Back to Homeroom</button>
@@ -92,7 +119,7 @@
 
 <!-- HUD (mobile-optimised two-row layout) -->
 <div id="hud" class="hidden">
-    <!-- Row 1: Lives | Score | Pause -->
+    <!-- Row 1: Lives | Score | Controls -->
     <div class="hud-row hud-row-top">
         <div class="hud-card lives-card">
             <span class="hud-label">LIVES</span>
@@ -102,7 +129,10 @@
             <span class="hud-label">SCORE</span>
             <div id="score-display">0</div>
         </div>
-        <button id="hud-pause-btn" class="hud-pause-btn" title="Pause (P)">⏸️</button>
+        <div class="hud-controls-group">
+            <button id="hud-sound-btn" class="hud-sound-btn" title="Toggle Mute (M)">🔊</button>
+            <button id="hud-pause-btn" class="hud-pause-btn" title="Pause (P)">⏸️</button>
+        </div>
     </div>
     <!-- Row 2: Combo/Form | Restore Meter -->
     <div class="hud-row hud-row-bottom">
@@ -585,6 +615,7 @@
 </div>
 
 <script src="questions.js"></script>
+<script src="audio.js"></script>
 <script src="game.js"></script>
 </body>
 </html>
